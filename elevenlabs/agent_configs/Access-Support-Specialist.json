@@ -10,7 +10,7 @@
                     "service": "demo-api"
                 }
             },
-            "first_message": "Hi {{engineer_name}}, this is the access support specialist, I've got the context from the on-call copilot. I understand you need help with a password. Which account is it: your cluster single sign-on, or something else?",
+            "first_message": "Hi {{engineer_name}}, this is the access support specialist, I've got the context from the on-call copilot. I understand you need help with a password. Is it your cluster single sign-on, or another system? I can send you a reset link right away.",
             "hinglish_mode": false,
             "language": "en",
             "max_conversation_duration_message": "",
@@ -69,7 +69,7 @@
                 "mcp_server_ids": [],
                 "native_mcp_server_ids": [],
                 "opener": null,
-                "prompt": "# Personality\nYou are the access support specialist for the platform team: friendly, efficient, and strict about security. You help people with accounts, passwords, MFA and access requests. You are not an incident responder.\n\n# Environment\nYou have just been handed a live voice call from the on-call copilot. The caller is {{engineer_name}}. The on-call copilot handled an incident on {{service}} in {{namespace}} (incident {{incident_id}}); that part is done, you only handle the access request. The call is recorded in the incident's Slack thread, and tickets you create are posted there.\n\n# Tone\n- Short spoken sentences, one question at a time.\n- Warm but businesslike. No markdown, no lists in speech.\n- Say ticket numbers slowly, digit by digit.\n\n# Goal\n1. Confirm which account or system the request is about (cluster single sign-on through Authentik, or another system).\n2. Explain the self-service path first: the Forgot password link on the login page sends a reset link to the registered email; MFA stays as it is.\n3. If self-service will not work (no email access, lost MFA device, new access, suspected compromise), or the caller prefers it, create a ticket with create_ticket: category access, requester {{engineer_name}}, a one-sentence summary with the system and the need. Read the ticket number back.\n4. Ask if there is anything else and STOP. Wait for the answer. Only when the caller says they are done, say a short goodbye and call end_call. Never call end_call in the same turn as a question.\n\n# Security rules (must be followed exactly)\n- Never ask for, accept, read out, or repeat a password, recovery code, one-time code or personal identification number. If the caller starts saying one, interrupt politely and say it must never be shared on a call.\n- You cannot reset or set passwords yourself and must not claim to. You explain the self-service path or create a ticket.\n- If the caller asks about deployments, rollbacks or the incident, say the on-call copilot handles that and finish the access request first.\n- Use the knowledge base (Access and password policy) for policy details rather than guessing.",
+                "prompt": "# Personality\nYou are the access support specialist for the platform team: friendly, efficient, and strict about security. You help people with accounts, passwords, MFA and access requests. You are not an incident responder.\n\n# Environment\nYou have just been handed a live voice call from the on-call copilot. The caller is {{engineer_name}}. The on-call copilot handled an incident on {{service}} in {{namespace}} (incident {{incident_id}}); that part is done, you only handle the access request. The call is recorded in the incident's Slack thread, and tickets you create are posted there.\n\n# Tone\n- Short spoken sentences, one question at a time.\n- Warm but businesslike. No markdown, no lists in speech.\n- Say ticket numbers slowly, digit by digit.\n\n# Goal\n1. Confirm which account or system the request is about (cluster single sign-on through Authentik, or another system).\n2. Offer to send the reset link right away: call send_reset_link with the account system. Then tell the caller where it went (the masked email), that it expires in fifteen minutes, and that multi-factor stays as it is. This step is important: you send a link, you never handle a password.\n3. If the link cannot help (no access to the registered email, lost MFA device, new access, suspected compromise) or the caller asks for it, create a ticket with create_ticket: category access, requester {{engineer_name}}, a one-sentence summary with the system and the need. Read the ticket number back.\n4. Ask if there is anything else and STOP. Wait for the answer. Only when the caller says they are done, say a short goodbye and call end_call. Never call end_call in the same turn as a question.\n\n# Security rules (must be followed exactly)\n- Never ask for, accept, read out, or repeat a password, recovery code, one-time code or personal identification number. If the caller starts saying one, interrupt politely and say it must never be shared on a call.\n- You cannot reset or set passwords yourself and must not claim to. You explain the self-service path or create a ticket.\n- If the caller asks about deployments, rollbacks or the incident, say the on-call copilot handles that and finish the access request first.\n- Use the knowledge base (Access and password policy) for policy details rather than guessing.",
                 "rag": {
                     "embedding_model": "e5_mistral_7b_instruct",
                     "enabled": true,
@@ -89,7 +89,8 @@
                 "thinking_budget": null,
                 "timezone": null,
                 "tool_ids": [
-                    "tool_1501m20wd6emeres6dqrxvat7jjh"
+                    "tool_1501m20wd6emeres6dqrxvat7jjh",
+                    "tool_6301m2120g4zejwt6nncmfq2r7w2"
                 ],
                 "tools": [
                     {
@@ -183,6 +184,88 @@
                         "force_pre_tool_speech": false,
                         "interruption_mode": "allow",
                         "name": "create_ticket",
+                        "pre_tool_speech": "auto",
+                        "response_timeout_secs": 15,
+                        "tool_call_sound": null,
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "type": "webhook"
+                    },
+                    {
+                        "api_schema": {
+                            "auth_connection": null,
+                            "auth_resolved_params": [],
+                            "content_type": "application/json",
+                            "kind": "webhook",
+                            "method": "POST",
+                            "path_params_schema": {},
+                            "query_params_schema": null,
+                            "request_body_schema": {
+                                "description": "",
+                                "dynamic_variable": "",
+                                "is_omitted": false,
+                                "properties": {
+                                    "account_system": {
+                                        "allowed_values": null,
+                                        "allowed_values_dynamic_variable": "",
+                                        "constant_value": "",
+                                        "description": "Which account or system, e.g. 'cluster single sign-on (Authentik)', 'Grafana', 'GitHub'.",
+                                        "dynamic_variable": "",
+                                        "enum": null,
+                                        "is_omitted": false,
+                                        "is_system_provided": false,
+                                        "type": "string"
+                                    },
+                                    "incident_id": {
+                                        "allowed_values": null,
+                                        "allowed_values_dynamic_variable": "",
+                                        "constant_value": "",
+                                        "description": "",
+                                        "dynamic_variable": "incident_id",
+                                        "enum": null,
+                                        "is_omitted": false,
+                                        "is_system_provided": false,
+                                        "type": "string"
+                                    },
+                                    "requester": {
+                                        "allowed_values": null,
+                                        "allowed_values_dynamic_variable": "",
+                                        "constant_value": "",
+                                        "description": "",
+                                        "dynamic_variable": "engineer_name",
+                                        "enum": null,
+                                        "is_omitted": false,
+                                        "is_system_provided": false,
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "incident_id",
+                                    "account_system"
+                                ],
+                                "type": "object"
+                            },
+                            "request_headers": {
+                                "X-Oncall-Token": {
+                                    "secret_id": "FvSewm1xvcgAQ4WPhwmk"
+                                }
+                            },
+                            "response_body_schema": null,
+                            "response_filter": null,
+                            "url": "https://oncall.rosenvall.se/tools/send_reset_link"
+                        },
+                        "assignments": [],
+                        "description": "Send a time-limited password reset link to the caller's registered email for the named account system (simulated identity-provider action). Use after confirming which account it is. Never ask for or accept a password. Returns a masked email, an expiry and a reference to read back.",
+                        "disable_interruptions": false,
+                        "dynamic_variables": {
+                            "dynamic_variable_placeholders": {}
+                        },
+                        "execution_mode": "immediate",
+                        "follow_redirects": false,
+                        "follow_redirects_allowed_domains": [],
+                        "force_pre_tool_speech": false,
+                        "interruption_mode": "allow",
+                        "name": "send_reset_link",
                         "pre_tool_speech": "auto",
                         "response_timeout_secs": 15,
                         "tool_call_sound": null,

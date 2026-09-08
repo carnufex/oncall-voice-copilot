@@ -57,8 +57,9 @@ Say, in this order (short, natural):
    says it is waiting for the rollout. Then: healthy, 1 of 1 on 1.0.0.
 5. **"One more thing, I also need help changing my password."**
    Expect: the agent says it will hand you over, then the **Access Support Specialist** (a
-   different voice) takes the same call: she explains the self-service reset path and creates a
-   ticket (`create_ticket` card on the timeline, ticket posted in the Slack thread).
+   different voice) takes the same call. Say **"It's my cluster single sign-on."** She sends a
+   reset link (`send_reset_link` card on the timeline, masked email + reference posted in the
+   Slack thread; simulated identity-provider action) and offers a ticket only if the link cannot help.
    > "Agent-to-agent transfer: the on-call agent has no business touching passwords, so it hands
    > over to a specialist with its own prompt, knowledge base, tools and evaluation criteria.
    > Same call, same context, different guardrails."

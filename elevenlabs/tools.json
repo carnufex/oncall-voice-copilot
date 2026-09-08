@@ -54,6 +54,11 @@
             "type": "webhook",
             "config": "tool_configs\\create_ticket.json",
             "id": "tool_1501m20wd6emeres6dqrxvat7jjh"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\send_reset_link.json",
+            "id": "tool_6301m2120g4zejwt6nncmfq2r7w2"
         }
     ]
 }

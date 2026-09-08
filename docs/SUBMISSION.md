@@ -9,7 +9,7 @@ executed and verified)
 
 **Loom:** (link)
 
-**Repository:** (link) — README is the handoff doc; `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`,
+**Repository:** https://github.com/carnufex/oncall-voice-copilot — README is the handoff doc; `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`,
 `docs/SPEC.md`.
 
 **One paragraph.** An on-call voice copilot for a Kubernetes cluster. A Slack slash command

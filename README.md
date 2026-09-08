@@ -38,7 +38,7 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
 
 | Capability | Where |
 |---|---|
-| 10 webhook tools with a workspace-secret header, dynamic-variable parameters, spoken summaries | `elevenlabs/tool_configs/` |
+| 12 webhook tools with a workspace-secret header, dynamic-variable parameters, spoken summaries | `elevenlabs/tool_configs/` |
 | Dynamic variables from the alert (`incident_id`, `service`, `alert_reason`, `engineer_name`, …) injected at session start | `services/oncall-tools/src/routes/api.ts` |
 | Knowledge base with RAG: CrashLoopBackOff runbook, service catalog, change policy | `docs/runbooks/` |
 | Data collection (`root_cause`, `action_taken`, `confirmation_obtained`) and 5 evaluation criteria | agent config, `platform_settings` |
@@ -47,7 +47,7 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
 | Language detection with a Swedish preset (multilingual TTS only for the preset; English keeps `eleven_flash_v2`) | agent config `language_presets` |
 | Postmortem: the post-call webhook opens a GitHub issue with summary, root cause, action, commit, conversation id, evaluation results and the full timeline | `services/oncall-tools/src/routes/webhooks.ts` |
 | Agent tests: 3 unit tests on the confirmation rules, 1 on scope refusal, 1 end-to-end simulation against the live tools | `elevenlabs/test_configs/` |
-| Agent-to-agent transfer: password/access requests hand over to the **Access Support Specialist** (own voice, prompt, KB, `create_ticket` tool, own evaluation criteria) on the same call | agent config `built_in_tools.transfer_to_agent`, `elevenlabs/agent_configs/` |
+| Agent-to-agent transfer: password/access requests hand over to the **Access Support Specialist** (own voice, prompt, KB, `send_reset_link` + `create_ticket` tools, own evaluation criteria) on the same call | agent config `built_in_tools.transfer_to_agent`, `elevenlabs/agent_configs/` |
 | Post-call webhook, HMAC-verified, closing the loop in Slack | `services/oncall-tools/src/routes/webhooks.ts` |
 | React SDK (`@elevenlabs/react`, WebRTC) with a conversation token minted server-side | `services/oncall-tools/web/` |
 | Agents-as-code: agent, tools and tests pulled/pushed with the ElevenLabs CLI | `elevenlabs/` |
@@ -143,7 +143,7 @@ explanation, because the tool runtime hides non-2xx bodies from the model.
 | `propose_action` | ReplicaSet history / Git history for the rollback target | in-memory plan with TTL |
 | `execute_action` | – | one Git commit on one file, one ArgoCD refresh annotation |
 | `verify_health` | k8s API, polls up to 90 s | marks incident mitigated |
-| `resolve_incident`, `add_note` | – | Slack thread, Slack call end |
+| `resolve_incident`, `add_note`, `create_ticket`, `send_reset_link` | – | Slack thread, Slack call end (ticket and reset email are simulated integrations) |
 
 ## Design decisions
 
