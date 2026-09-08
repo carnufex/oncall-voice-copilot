@@ -114,9 +114,19 @@ toolsRoute.post(
       message: p.message ? redact(p.message) : p.message,
     }));
     const badPod = podSummaries.find((p) => p.state === "waiting");
-    const spoken_summary = deployment
-      ? `${incident.service} is at ${deployment.ready} of ${deployment.desired} pods ready, on version ${imageTag(deployment.image)}.${badPod ? ` The pod is in ${badPod.reason ?? badPod.state} with ${countPhrase(badPod.restarts, "restart")}.` : ""}`
-      : `Could not read the ${incident.service} deployment.`;
+    const badImage = pods.find((p) => p.metadata?.name === badPod?.name)?.spec?.containers?.[0]?.image;
+    const survivor = podSummaries.find((p) => p.state === "running" && p.ready && p.name !== badPod?.name);
+    const survivorImage = pods.find((p) => p.metadata?.name === survivor?.name)?.spec?.containers?.[0]?.image;
+    let spoken_summary: string;
+    if (!deployment) {
+      spoken_summary = `Could not read the ${incident.service} deployment.`;
+    } else if (badPod && survivor && badImage && survivorImage && badImage !== survivorImage) {
+      spoken_summary = `The rollout of ${incident.service} to version ${imageTag(badImage)} is stuck: the new pod is in ${badPod.reason ?? "a waiting state"} with ${countPhrase(badPod.restarts, "restart")}, while the previous pod on version ${imageTag(survivorImage)} is still running and serving traffic.`;
+    } else if (badPod) {
+      spoken_summary = `${incident.service} is at ${deployment.ready} of ${deployment.desired} pods ready on version ${imageTag(deployment.image)}. The pod is in ${badPod.reason ?? badPod.state} with ${countPhrase(badPod.restarts, "restart")}.`;
+    } else {
+      spoken_summary = `${incident.service} is at ${deployment.ready} of ${deployment.desired} pods ready on version ${imageTag(deployment.image)}, no pods waiting.`;
+    }
     return {
       json: {
         deployment: deployment ?? { name: incident.service, image: "unknown", desired: 0, ready: 0, updated: 0, available: 0 },
@@ -216,13 +226,18 @@ toolsRoute.post(
     }));
     const rsSummaries = replicasets.map((rs) => ({ name: rs.name, image: rs.image, created: rs.created, replicas: rs.replicas, ready: rs.ready }));
     const last = commits[0];
+    const newestRs = rsSummaries[0];
+    const previousRs = rsSummaries.find((rs) => rs.image !== newestRs?.image);
+    const rsPhrase = newestRs && previousRs
+      ? ` The ReplicaSet history shows the current rollout moved from version ${imageTag(previousRs.image)} to version ${imageTag(newestRs.image)}, created ${countPhrase(minutesAgo(newestRs.created), "minute")} ago.`
+      : "";
     const spoken_summary = last
       ? `The most recent change was ${countPhrase(last.minutes_ago, "minute")} ago by ${last.author}: ${last.message}.${
           last.image_before && last.image_after && last.image_before !== last.image_after
             ? ` It changed the image from version ${imageTag(last.image_before)} to ${imageTag(last.image_after)}.`
             : ""
         }`
-      : "No recent GitOps commit history is available.";
+      : `Git commit history is not available right now.${rsPhrase}`;
     return { json: { file: config.gitopsFile, commits, replicasets: rsSummaries, spoken_summary } };
   }),
 );
@@ -307,7 +322,10 @@ toolsRoute.post(
       } catch (err) {
         revertPendingActionExecution(incident, body.action_id);
         if (err instanceof FileDriftedError) {
-          return { status: 409, json: { error: "file_drifted" } };
+          return { status: 409, json: { error: "file_drifted", spoken_summary: "The manifest no longer contains the image I planned to replace, so I did not commit anything. Someone else may have changed it; let me re-check the status." } };
+        }
+        if ((err as Error).message === "github_disabled") {
+          return { status: 503, json: { error: "github_disabled", spoken_summary: "I could not commit the rollback: the GitHub integration is not configured on this deployment. Nothing was changed." } };
         }
         throw err;
       }

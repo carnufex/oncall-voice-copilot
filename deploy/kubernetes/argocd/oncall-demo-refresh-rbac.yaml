@@ -1,0 +1,28 @@
+# Lets the on-call copilot backend (ServiceAccount oncall-tools in oncall-demo)
+# trigger an immediate ArgoCD refresh of ONE Application after it commits a
+# rollback to Git. resourceNames pins it to the oncall-demo app; no sync/delete,
+# no other apps. Without this the demo waits for the 3 min reconciliation poll.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oncall-demo-refresh
+  namespace: argocd
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications"]
+    resourceNames: ["oncall-demo"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: oncall-demo-refresh
+  namespace: argocd
+subjects:
+  - kind: ServiceAccount
+    name: oncall-tools
+    namespace: oncall-demo
+roleRef:
+  kind: Role
+  name: oncall-demo-refresh
+  apiGroup: rbac.authorization.k8s.io

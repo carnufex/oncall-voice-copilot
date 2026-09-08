@@ -1,0 +1,61 @@
+# Tool backend for the ElevenLabs on-call copilot: webhook tools, Slack slash
+# command, voice-call page, post-call webhook and the CrashLoop detector.
+# Runs as ServiceAccount oncall-tools (read-only RBAC, see tools-rbac.yaml).
+# Source: github.com/carnufex/oncall-voice-copilot (services/oncall-tools).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-tools
+  namespace: oncall-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  replicas: 1                 # in-memory incident store -> single replica
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oncall-tools
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: oncall-tools
+    spec:
+      serviceAccountName: oncall-tools
+      imagePullSecrets:
+        - name: oncall-demo-registry
+      containers:
+        - name: oncall-tools
+          image: registry.rosenvall.se/carnufex/oncall-tools:sha-bd89053
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: PUBLIC_BASE_URL, value: "https://oncall.rosenvall.se" }
+            - { name: K8S_NAMESPACE, value: oncall-demo }
+            - { name: ALLOWED_DEPLOYMENTS, value: demo-api }
+            - { name: ARGOCD_APP_NAME, value: oncall-demo }
+            - { name: ARGOCD_NAMESPACE, value: argocd }
+            - { name: GITHUB_REPO, value: carnufex/Rosenvalls-Homelab }
+            - { name: GITHUB_BRANCH, value: master }
+            - { name: GITOPS_FILE, value: kubernetes/applications/oncall-demo/demo-api-deployment.yaml }
+            - { name: ONCALL_ENGINEER_NAME, value: Christopher }
+            - { name: LOG_LEVEL, value: info }
+          envFrom:
+            - secretRef: { name: oncall-tools-secrets }
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 3
+            failureThreshold: 20
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 15
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }

@@ -26,7 +26,8 @@ async function checkDeployment(deployment: string): Promise<void> {
     namespace: config.k8sNamespace,
     alert: {
       reason: summary.reason ?? "CrashLoopBackOff",
-      message: summary.message ?? `Pod ${summary.name} is crashlooping`,
+      // Kubernetes appends "container=... pod=...(uid)" to the back-off message; drop it for speech.
+      message: (summary.message ?? `Pod ${summary.name} is crashlooping`).replace(/\s+container=.*$/, ""),
       pod: summary.name,
       restarts: summary.restarts,
     },

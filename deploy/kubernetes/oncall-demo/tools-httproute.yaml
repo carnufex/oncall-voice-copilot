@@ -1,0 +1,26 @@
+# Public entry point for ElevenLabs webhook tools, the Slack slash command and
+# the voice-call page. Cloudflare Tunnel already wildcard-routes *.rosenvall.se
+# to gateway/external; this does the host match. All /tools/* and /slack/* and
+# /webhooks/* requests are signature/token-authenticated in the app.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: oncall-tools
+  namespace: oncall-demo
+spec:
+  hostnames:
+    - oncall.rosenvall.se
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: external
+      namespace: gateway
+      sectionName: https
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: oncall-tools
+          port: 8080

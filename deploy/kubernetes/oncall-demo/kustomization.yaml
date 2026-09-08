@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Sandbox for the on-call voice copilot demo. Onboarding in two steps per
+# gitops-app-onboarding: runtime first, public HTTPRoute + tool backend once the
+# image is published and healthy.
+resources:
+  - ns.yaml
+  - image-pull-secret.yaml
+  - tools-externalsecret.yaml
+  - tools-rbac.yaml
+  - demo-api-deployment.yaml     # the victim; image tag is changed only via Git
+  - demo-api-service.yaml
+  - tools-service.yaml
+  # --- step 2: tool backend + public route ---
+  - tools-deployment.yaml
+  - tools-httproute.yaml        # oncall.rosenvall.se via gateway/external

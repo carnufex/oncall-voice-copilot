@@ -1,0 +1,38 @@
+# Least-privilege identity for the on-call copilot's tool backend.
+# Read-only inside oncall-demo: pods, logs, events, deployments, replicasets.
+# No secrets, no configmaps, no exec, no ClusterRole. Writes happen in Git;
+# the only cluster write is the ArgoCD refresh annotation (see
+# infrastructure/controllers/argocd/oncall-demo-refresh-rbac.yaml).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oncall-tools
+  namespace: oncall-demo
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oncall-tools-readonly
+  namespace: oncall-demo
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: oncall-tools-readonly
+  namespace: oncall-demo
+subjects:
+  - kind: ServiceAccount
+    name: oncall-tools
+    namespace: oncall-demo
+roleRef:
+  kind: Role
+  name: oncall-tools-readonly
+  apiGroup: rbac.authorization.k8s.io

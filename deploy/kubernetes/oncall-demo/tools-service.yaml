@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oncall-tools
+  namespace: oncall-demo
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: oncall-tools
+  ports:
+    - { name: http, port: 8080, targetPort: http, protocol: TCP }

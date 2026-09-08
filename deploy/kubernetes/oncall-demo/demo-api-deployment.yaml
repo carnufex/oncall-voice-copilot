@@ -1,0 +1,41 @@
+# The "victim" service. The image tag on the line below is the ONLY thing the
+# on-call copilot ever changes, and only through a Git commit (never kubectl):
+#   1.0.0 = healthy, 1.1.0 = crashes on boot (missing FEATURE_FLAGS_URL).
+# /oncall drill in Slack bumps it to 1.1.0; a voice-approved rollback reverts it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-api
+  namespace: oncall-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: demo-api
+    spec:
+      imagePullSecrets:
+        - name: oncall-demo-registry
+      containers:
+        - name: demo-api
+          image: registry.rosenvall.se/carnufex/oncall-demo-api:1.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8080 }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 15
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { cpu: 200m, memory: 128Mi }
