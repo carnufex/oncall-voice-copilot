@@ -16,8 +16,8 @@ COPY package.json package-lock.json* ./
 RUN npm install --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 
-RUN addgroup -S -g 1000 oncall && adduser -S -u 1000 -G oncall oncall
-USER oncall
+# node:22-alpine ships user `node` as uid/gid 1000; matches the pod securityContext/fsGroup.
+USER node
 
 EXPOSE 8080
 CMD ["node", "dist/index.js"]
