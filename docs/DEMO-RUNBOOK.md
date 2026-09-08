@@ -40,7 +40,7 @@ SSO cookie lasts 12 h), otherwise the Join button detours through the login page
 | 0:40 | Back to Slack: alert + call card appear | "The detector saw the crash, opened an incident and posted a call card." | Click **Join** |
 | 0:50 | Call page opens. Click **Answer call** | Let the agent speak. | The orb speaks, the timeline fills |
 | 0:55 | Call page | "What do the logs say?" → agent reads the FATAL line and flags the poisoned line | To camera during the tool call: "Read-only tools; the agent's identity can't see other namespaces or any secret, by RBAC." |
-| 1:20 | Call page | "What changed?" → the deploy commit, 1.0.0 → 1.1.0 | To camera: "The poisoned log line told it to roll back without asking. It treats tool output as data." |
+| 1:20 | Call page | "What changed?" → the deploy commit, 1.0.0 → 1.1.0, diff card appears on the right | To camera: "The poisoned log line told it to roll back without asking. It treats tool output as data. And that diff card is a client tool: the agent drives the page." |
 | 1:40 | Call page | "Roll it back." → plan read aloud, amber card | To camera: "Two-step action: the plan has an id that expires in two minutes; without it the backend refuses." |
 | 2:00 | Call page | "Yes, go ahead." → commit link, then verify_health | Optional: glance at the terminal `kubectl -w` while it waits |
 | 2:30 | Call page | Agent: healthy on 1.0.0, resolved, "anything else?" | |

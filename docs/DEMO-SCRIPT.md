@@ -44,7 +44,11 @@ Say, in this order (short, natural):
    > it, and the backend would refuse anyway: no plan id, no execution."
    The tool card appears on the timeline.
 2. **"What changed?"**
-   Expect: the commit by Release Bot, `1.0.0 → 1.1.0`, minutes ago.
+   Expect: the commit by Release Bot, `1.0.0 → 1.1.0`, minutes ago, and the **diff card** appearing
+   on the right (the agent called the `show_diff` client tool): the exact `image:` line change.
+   > "That card is a client tool: the agent drives the page while it talks."
+   If this is a repeat drill, the agent's opening line already said "this is the second incident
+   for this service; last time a rollback fixed it" (incident history as a dynamic variable).
    > (to camera) "Read-only tools: pod status, logs, events, ReplicaSet and Git history. The
    > agent's Kubernetes identity cannot see other namespaces or any secret, by RBAC, not by prompt."
 3. **"Roll it back."**
