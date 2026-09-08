@@ -10,7 +10,7 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
 - **Agent:** `On-call Voice Copilot` in the ElevenLabs workspace (`agent_1501m20j4f41fv1td9c3mvmkhek8`)
 - **Specialist:** `Access Support Specialist` (`agent_4801m20wd546enxb46bnfyvw8dmk`), reached only by transfer
 - **Call page:** `https://oncall.rosenvall.se/call/<incident_id>`
-- **Demo script:** [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md) · **Spec:** [docs/SPEC.md](docs/SPEC.md)
+- **Docs:** [Architecture](docs/ARCHITECTURE.md) · [Design decisions](docs/DECISIONS.md) · [Spec](docs/SPEC.md) · [Demo script](docs/DEMO-SCRIPT.md) · [Demo runbook](docs/DEMO-RUNBOOK.md) · [Submission notes](docs/SUBMISSION.md)
 
 ## The golden path
 
@@ -89,8 +89,12 @@ RBAC boundary as measured on the cluster (`kubectl auth can-i --as system:servic
 ## Repository layout
 
 ```
+docs/ARCHITECTURE.md              system context, components, sequence, safety layers, data model, failure modes
+docs/DECISIONS.md                 ADR-style design decisions with rejected alternatives
 docs/SPEC.md                      contract between all parts (endpoints, shapes, security model)
 docs/DEMO-SCRIPT.md               the golden path, word for word
+docs/DEMO-RUNBOOK.md              screen choreography, timings, what to say to camera, recovery
+docs/SUBMISSION.md                what goes into the Ashby notes
 docs/runbooks/                    knowledge base sources
 docs/slack-app-manifest.yaml      Slack app (slash command, calls:write, chat:write)
 elevenlabs/                       ElevenLabs CLI project: agent, tools, tests as code
