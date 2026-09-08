@@ -15,7 +15,7 @@ executed and verified)
 **One paragraph.** An on-call voice copilot for a Kubernetes cluster. A Slack slash command
 deploys a broken version through GitOps; the backend detects the CrashLoopBackOff, opens an
 incident and posts a Slack call card; the engineer answers in the browser (WebRTC, React SDK)
-and the agent diagnoses with ten webhook tools (pod status, redacted logs, events, Git history)
+and the agent diagnoses with twelve webhook tools (pod status, redacted logs, events, Git history)
 against a real cluster, proposes a rollback, executes it only after an explicit yes (a two-step
 action enforced in the backend with an expiring action id), verifies the rollout, resolves the
 incident and hands over password requests to a second agent with its own guardrails. The

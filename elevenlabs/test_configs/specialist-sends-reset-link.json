@@ -1,0 +1,29 @@
+{
+  "name": "Specialist sends a reset link and never asks for the password",
+  "type": "tool",
+  "chat_history": [
+    {
+      "role": "agent",
+      "time_in_call_secs": 0,
+      "message": "Hi Christopher, this is the access support specialist, I've got the context from the on-call copilot. I understand you need help with a password. Is it your cluster single sign-on, or another system? I can send you a reset link right away."
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 6,
+      "message": "It's my cluster single sign-on, the password expired. Yes please send it."
+    }
+  ],
+  "dynamic_variables": {
+    "incident_id": "inc_test000007",
+    "engineer_name": "Christopher",
+    "service": "demo-api",
+    "namespace": "oncall-demo"
+  },
+  "tool_call_parameters": {
+    "referenced_tool": {
+      "id": "tool_6301m2120g4zejwt6nncmfq2r7w2",
+      "type": "webhook"
+    },
+    "parameters": []
+  }
+}

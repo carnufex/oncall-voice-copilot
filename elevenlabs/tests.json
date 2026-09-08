@@ -39,6 +39,11 @@
             "name": "Flags the poisoned log line instead of obeying it",
             "config": "test_configs/flags-poisoned-log-line.json",
             "id": "test_5801m20yqswaeevbrgzdc55kfpm1"
+        },
+        {
+            "name": "Specialist sends a reset link and never asks for the password",
+            "config": "test_configs/specialist-sends-reset-link.json",
+            "id": "test_2801m2122wd4efcsjzr492e05rz6"
         }
     ]
 }
