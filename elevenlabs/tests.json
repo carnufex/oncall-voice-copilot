@@ -19,6 +19,11 @@
             "name": "Declines out-of-scope requests and explains why",
             "config": "test_configs/refuses-out-of-scope.json",
             "id": "test_0901m20j8ynaedyr8ahwypqh6c1p"
+        },
+        {
+            "name": "E2E simulation: diagnose and propose rollback against live tools",
+            "config": "test_configs/e2e-simulation-live-tools.json",
+            "id": "test_7901m20kd591e0v9tntf8f2mtfng"
         }
     ]
 }

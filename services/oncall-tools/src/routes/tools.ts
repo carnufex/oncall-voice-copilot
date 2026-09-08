@@ -255,7 +255,10 @@ toolsRoute.post(
     const toImage = alternative?.image ?? commits.find((c) => c.image_before && c.image_before !== fromImage)?.image_before;
 
     if (!toImage) {
-      return { status: 409, json: { error: "no_rollback_target" } };
+      return {
+        json: { status: "rejected", error: "no_rollback_target", spoken_summary: "I could not find a previous image to roll back to, so there is no rollback plan. The ReplicaSet history has no other version." },
+        timeline: { kind: "note" as TimelineEntryKind, title: "propose_action", detail: "No rollback target found" },
+      };
     }
 
     const plan = {
@@ -292,12 +295,19 @@ toolsRoute.post(
     incidentIdSchema.extend({ action_id: z.string(), confirmation: z.string().optional() }),
     async (incident, body) => {
       if (body.confirmation !== "confirmed") {
-        return { status: 400, json: { error: "confirmation_required" } };
+        return { json: { status: "rejected", error: "confirmation_required", spoken_summary: "Nothing was executed: the request did not carry the confirmation flag. Ask the engineer for a clear yes, then call execute_action with confirmation set to confirmed." } };
       }
       const attempt = tryExecutePendingAction(incident, body.action_id);
       if (!attempt.ok) {
-        const status = attempt.error === "action_not_found" ? 404 : attempt.error === "action_expired" ? 410 : 409;
-        return { status, json: { error: attempt.error } };
+        const explanations: Record<string, string> = {
+          action_not_found: "Nothing was executed: that action id does not exist for this incident. Propose the action again and use the new id.",
+          action_expired: "Nothing was executed: the plan expired after two minutes. Propose the action again, read the new plan, and get a fresh yes.",
+          action_already_executed: "Nothing was executed: that plan was already executed once and cannot run twice. Verify health instead.",
+        };
+        return {
+          json: { status: "rejected", error: attempt.error, spoken_summary: explanations[attempt.error] ?? "Nothing was executed." },
+          timeline: { kind: "note" as TimelineEntryKind, title: "execute_action", detail: `Rejected: ${attempt.error}` },
+        };
       }
       const { plan } = attempt.action;
 
@@ -322,10 +332,16 @@ toolsRoute.post(
       } catch (err) {
         revertPendingActionExecution(incident, body.action_id);
         if (err instanceof FileDriftedError) {
-          return { status: 409, json: { error: "file_drifted", spoken_summary: "The manifest no longer contains the image I planned to replace, so I did not commit anything. Someone else may have changed it; let me re-check the status." } };
+          return {
+            json: { status: "failed", error: "file_drifted", spoken_summary: "Nothing was committed: the manifest no longer contains the image I planned to replace. Someone else may have changed it. Re-check the pod status and propose again if needed." },
+            timeline: { kind: "note" as TimelineEntryKind, title: "execute_action", detail: "Failed: manifest drifted, nothing committed" },
+          };
         }
         if ((err as Error).message === "github_disabled") {
-          return { status: 503, json: { error: "github_disabled", spoken_summary: "I could not commit the rollback: the GitHub integration is not configured on this deployment. Nothing was changed." } };
+          return {
+            json: { status: "failed", error: "github_disabled", spoken_summary: "Nothing was committed: the GitHub integration is not configured on this deployment, so I cannot write to the GitOps repository. The engineer would have to commit the rollback manually." },
+            timeline: { kind: "note" as TimelineEntryKind, title: "execute_action", detail: "Failed: GitHub integration disabled, nothing committed" },
+          };
         }
         throw err;
       }

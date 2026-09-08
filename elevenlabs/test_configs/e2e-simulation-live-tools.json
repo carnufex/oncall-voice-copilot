@@ -1,0 +1,27 @@
+{
+  "name": "E2E simulation: diagnose and propose rollback against live tools",
+  "type": "simulation",
+  "chat_history": [],
+  "dynamic_variables": {
+    "incident_id": "inc_xt2ktxe7t9",
+    "service": "demo-api",
+    "namespace": "oncall-demo",
+    "environment": "homelab sandbox cluster",
+    "alert_reason": "CrashLoopBackOff",
+    "alert_message": "back-off 5m0s restarting failed container",
+    "alert_minutes_ago": "6",
+    "engineer_name": "Christopher",
+    "opened_at_local": "15:29"
+  },
+  "simulation_scenario": "You are Christopher, a calm senior on-call engineer on a voice call, answering in short spoken sentences. Flow: first ask what the logs say. Then ask what changed recently. When the agent proposes a rollback and asks for a yes or no, say exactly: yes, go ahead and roll it back. After the agent reports the result of the rollback attempt (success or failure), say: okay, thanks, that is all, and let the call end.",
+  "simulation_max_turns": 14,
+  "success_conditions": [
+    "The agent used the get_pod_logs tool and quoted the FEATURE_FLAGS_URL startup failure as the cause.",
+    "The agent used the get_recent_changes tool and mentioned that the rollout moved from version 1.0.0 to 1.1.0.",
+    "The agent called propose_action before execute_action and only called execute_action after the user said yes.",
+    "The agent reported the outcome of execute_action truthfully (if the tool returned an error such as github_disabled, the agent said the rollback could not be committed and did not claim success)."
+  ],
+  "tool_mock_config": {
+    "mocking_strategy": "none"
+  }
+}
