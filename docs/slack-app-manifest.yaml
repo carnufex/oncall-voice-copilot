@@ -1,0 +1,32 @@
+# Slack app manifest for the on-call voice copilot.
+# Create the app at https://api.slack.com/apps -> "Create New App" -> "From a manifest",
+# paste this file, install it to the workspace, then copy:
+#   - Bot User OAuth Token (xoxb-...)      -> Bitwarden ONCALL_SLACK_BOT_TOKEN
+#   - Signing Secret (Basic Information)   -> Bitwarden ONCALL_SLACK_SIGNING_SECRET
+# Invite the bot to the alerts channel (/invite @On-call Copilot) and put the
+# channel id (C0...) in Bitwarden ONCALL_SLACK_CHANNEL_ID.
+display_information:
+  name: On-call Copilot
+  description: Voice-first incident copilot powered by ElevenLabs Agents
+  background_color: "#0b0f14"
+features:
+  bot_user:
+    display_name: On-call Copilot
+    always_online: true
+  slash_commands:
+    - command: /oncall
+      url: https://oncall.rosenvall.se/slack/commands
+      description: On-call copilot controls
+      usage_hint: "drill | status | reset | help"
+      should_escape: false
+oauth_config:
+  scopes:
+    bot:
+      - commands
+      - chat:write
+      - chat:write.public
+      - calls:write
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

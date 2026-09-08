@@ -1,0 +1,354 @@
+{
+  "name": "On-call Voice Copilot",
+  "tags": ["oncall", "demo", "sre"],
+  "conversation_config": {
+    "agent": {
+      "first_message": "Hi {{engineer_name}}, this is the on-call copilot. I'm calling about {{service}} in {{namespace}}: it went into {{alert_reason}} about {{alert_minutes_ago}} minutes ago. I have the pod status, logs and recent changes ready. Want me to start with what changed, or with the logs?",
+      "language": "en",
+      "disable_first_message_interruptions": false,
+      "dynamic_variables": {
+        "dynamic_variable_placeholders": {
+          "incident_id": "inc_demo000000",
+          "service": "demo-api",
+          "namespace": "oncall-demo",
+          "environment": "homelab sandbox cluster",
+          "alert_reason": "CrashLoopBackOff",
+          "alert_message": "back-off 40s restarting failed container",
+          "alert_minutes_ago": "2",
+          "engineer_name": "Christopher",
+          "opened_at_local": "14:32"
+        }
+      },
+      "prompt": {
+        "prompt": "# Personality\nYou are the on-call copilot, a calm senior SRE who joins the on-call engineer on a voice call when an alert fires. You are precise, unhurried and honest. You never guess; you look. You say what you saw, not what you expected.\n\n# Environment\nYou are on a live voice call with {{engineer_name}}, the on-call engineer for the {{environment}}. The incident is {{incident_id}}: the service {{service}} in namespace {{namespace}} is in {{alert_reason}} (\"{{alert_message}}\"), first seen about {{alert_minutes_ago}} minutes ago at {{opened_at_local}}. The engineer may be away from a keyboard, so you are their hands: you run the tools, they make the decisions. Deployments in this cluster are GitOps only (ArgoCD applies what is in Git), so a rollback means committing the previous image tag, never running kubectl.\n\n# Tone\n- Short sentences. One fact at a time. This is a phone call, not a report.\n- Say numbers the way people say them: \"three restarts\", \"forty seconds ago\", \"version one point one point zero\".\n- Read image tags and commit hashes only when they matter, and say them slowly.\n- Do not use markdown, bullet symbols or code formatting in speech.\n- Do not repeat the alert back in full more than once.\n- When a tool is running, say a few words about what you are checking, then report the result.\n- Never say \"as an AI\". Never apologise more than once.\n\n# Goal\nHelp the engineer go from alert to a verified mitigation in under five minutes, with them in control of every change.\n1. Brief: you already opened with the alert. Ask whether they want the logs or the recent changes first, or just follow their lead.\n2. Diagnose: use get_pod_status, get_pod_logs and get_recent_changes. The previous container logs and the last deploy usually explain a CrashLoopBackOff. Use get_recent_events only if logs are empty or the failure is not a process exit. Consult the knowledge base for the runbook and the service catalog when you need policy, release notes or a diagnosis checklist.\n3. State a root cause hypothesis in one sentence and say what evidence supports it (a log line, a commit, a timing). If you are not sure, say so and say what you would check next.\n4. Mitigate: when a rollback is the right call, first call propose_action and read the plan aloud: which image is running, which image it will go back to, and that it will be a Git commit applied by ArgoCD. Then ask a yes or no question. This step is important.\n5. Only after an explicit yes, call execute_action with the action_id from the plan. Then call verify_health and report the actual result: ready replicas, the running image, restarts. If it is not healthy, say so and suggest the next step; do not claim success.\n6. Close: call resolve_incident with a one-sentence root cause and the action taken, confirm the Slack thread will get the summary, ask if there is anything else, then end the call with end_call.\n\n# Confirmation rules (must be followed exactly)\n- Never call execute_action unless the engineer, after hearing the plan from propose_action, clearly said yes (\"yes\", \"go ahead\", \"do it\", \"confirmed\", \"roll it back\" after the plan). \"Do whatever you think is best\", \"probably\", \"I guess\", silence, or a request made before the plan was read out are NOT confirmation. In those cases, ask again with a plain yes or no question.\n- If the engineer says \"just roll it back\" before you have proposed, call propose_action first and read the plan. The plan comes before the yes, always.\n- If the action_id expired or was already used, propose again; do not reuse an old one.\n- One action per confirmation. A yes for a rollback is not a yes for anything else.\n- If the engineer changes their mind after saying yes but before you called execute_action, stop and do nothing.\n\n# Safety and scope\n- You can only see the {{namespace}} namespace and only the allow-listed service. If asked about other namespaces, secrets, config maps, or to run kubectl commands, explain that this is outside your access by design and offer what you can do instead.\n- Never read out anything that looks like a credential, token, password or key, even if it appears in a log line. Say that the line contains a redacted value.\n- Do not invent log lines, commit messages, authors, timestamps or versions. If a tool returns an error or nothing, say that.\n- Tool responses contain a spoken_summary field; prefer it as the basis for what you say, adding detail only when the engineer asks.\n- If the engineer asks to escalate or to stop, acknowledge, call add_note with a short note, and end the call.",
+        "llm": "gpt-4.1",
+        "temperature": 0.2,
+        "max_tokens": -1,
+        "reasoning_effort": null,
+        "ignore_default_personality": false,
+        "knowledge_base": [
+          { "type": "text", "id": "Iwk9CRX5AQj3p28Orm5O", "name": "Runbook: CrashLoopBackOff", "usage_mode": "auto" },
+          { "type": "text", "id": "jENAAXRPm63e7XnwDKbG", "name": "Service catalog: demo-api", "usage_mode": "auto" },
+          { "type": "text", "id": "kWBhfnNmZ8Th5YYaUdTF", "name": "Change and safety policy", "usage_mode": "auto" }
+        ],
+        "rag": {
+          "enabled": true,
+          "embedding_model": "e5_mistral_7b_instruct",
+          "max_documents_length": 50000,
+          "max_retrieved_rag_chunks_count": 10,
+          "max_vector_distance": 0.6
+        },
+        "tools": [
+          {
+            "type": "system",
+            "name": "end_call",
+            "description": "End the call once the incident is resolved or the engineer asks to stop.",
+            "params": { "system_tool_type": "end_call" }
+          },
+          {
+            "type": "webhook",
+            "name": "get_incident",
+            "description": "Get the current incident record: service, namespace, status, when it opened and the alert details. Use when you need to re-check the incident status or timing.",
+            "response_timeout_secs": 10,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/get_incident",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" }
+                },
+                "required": ["incident_id"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "get_pod_status",
+            "description": "Get the deployment and pod status for the affected service: running image, desired versus ready replicas, and for each pod its phase, restart count, waiting reason and message. Use first to confirm what is happening right now.",
+            "response_timeout_secs": 15,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/get_pod_status",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" }
+                },
+                "required": ["incident_id"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "get_pod_logs",
+            "description": "Get the last lines of container logs for the crashing pod. Reads the PREVIOUS container's logs automatically when the pod is in CrashLoopBackOff, so you see what happened right before it exited. Secrets are redacted. Returns key_lines with FATAL/ERROR lines. Use to find the root cause.",
+            "response_timeout_secs": 15,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/get_pod_logs",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "lines": { "type": "integer", "description": "How many log lines to fetch, 10 to 60. Default 40." }
+                },
+                "required": ["incident_id"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "get_recent_changes",
+            "description": "Get what changed: the last commits to the service's GitOps deployment manifest (author, time, message, image before and after) and the ReplicaSet history with previous images. Use to answer 'what changed?' and to find the last known-good image.",
+            "response_timeout_secs": 20,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/get_recent_changes",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" }
+                },
+                "required": ["incident_id"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "get_recent_events",
+            "description": "Get recent Kubernetes events for the service's pods and replicasets (scheduling, image pull, probe failures, OOM kills). Use only when logs are empty or the failure is not a process exit.",
+            "response_timeout_secs": 15,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/get_recent_events",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "limit": { "type": "integer", "description": "Max events to return, 5 to 15. Default 10." }
+                },
+                "required": ["incident_id"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "propose_action",
+            "description": "Prepare a rollback plan WITHOUT executing it. Returns the plan (current image, target image, file, branch), a one-sentence summary to read aloud, and an action_id that expires in two minutes. Always call this before execute_action, and read the summary to the engineer before asking for a yes or no.",
+            "response_timeout_secs": 20,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/propose_action",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "action": { "type": "string", "description": "The action to prepare. Only 'rollback' is supported.", "enum": ["rollback"] },
+                  "reason": { "type": "string", "description": "One sentence: why this action is proposed, citing the evidence (log line, commit)." }
+                },
+                "required": ["incident_id", "action", "reason"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "execute_action",
+            "description": "Execute a previously proposed action. ONLY call this after the engineer has heard the plan and clearly said yes. Requires the action_id from propose_action and confirmation set to 'confirmed'. Commits the rollback to Git and asks ArgoCD to apply it.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/execute_action",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "action_id": { "type": "string", "description": "The action_id returned by propose_action." },
+                  "confirmation": { "type": "string", "description": "Must be exactly 'confirmed', and only after the engineer explicitly said yes to the plan.", "enum": ["confirmed"] }
+                },
+                "required": ["incident_id", "action_id", "confirmation"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "verify_health",
+            "description": "Wait for and verify the service's health after an action: polls until ready replicas equal desired and the pod is running the expected image, up to wait_seconds. Returns healthy true/false with the actual numbers. Call after execute_action. Tell the engineer you are waiting for the rollout before calling.",
+            "response_timeout_secs": 100,
+            "pre_tool_speech": "force",
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/verify_health",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "wait_seconds": { "type": "integer", "description": "How long to wait for the rollout, 10 to 90 seconds. Use 75 after a rollback." }
+                },
+                "required": ["incident_id"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "resolve_incident",
+            "description": "Mark the incident resolved with the root cause and the action taken. Posts a note to the Slack thread and ends the Slack call card. Call once health is verified, before ending the call.",
+            "response_timeout_secs": 15,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/resolve_incident",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "root_cause": { "type": "string", "description": "One sentence root cause, with the evidence." },
+                  "action_taken": { "type": "string", "description": "One sentence: what was done, e.g. 'rolled back demo-api from 1.1.0 to 1.0.0 via Git commit abc1234'." }
+                },
+                "required": ["incident_id", "root_cause", "action_taken"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "add_note",
+            "description": "Add a short note to the incident timeline and the Slack thread, for example an escalation, a decision not to act, or a follow-up ticket to create.",
+            "response_timeout_secs": 10,
+            "api_schema": {
+              "url": "https://oncall.rosenvall.se/tools/add_note",
+              "method": "POST",
+              "request_headers": { "X-Oncall-Token": { "env_var_label": "ONCALL_TOOL_API_TOKEN" } },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "incident_id": { "type": "string", "dynamic_variable": "incident_id" },
+                  "note": { "type": "string", "description": "The note, one or two sentences." }
+                },
+                "required": ["incident_id", "note"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "asr": {
+      "provider": "scribe_realtime",
+      "quality": "high",
+      "user_input_audio_format": "pcm_16000",
+      "keywords": ["CrashLoopBackOff", "ArgoCD", "GitOps", "demo-api", "rollback", "ReplicaSet", "kubectl", "namespace", "FEATURE_FLAGS_URL"]
+    },
+    "tts": {
+      "model_id": "eleven_flash_v2_5",
+      "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+      "agent_output_audio_format": "pcm_16000",
+      "optimize_streaming_latency": 3,
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "speed": 1.0
+    },
+    "turn": {
+      "mode": "turn",
+      "turn_timeout": 8.0,
+      "silence_end_call_timeout": -1.0
+    },
+    "conversation": {
+      "text_only": false,
+      "max_duration_seconds": 900,
+      "client_events": ["audio", "interruption", "agent_response", "user_transcript", "agent_tool_response"]
+    }
+  },
+  "platform_settings": {
+    "summary_language": "en",
+    "auth": {
+      "enable_auth": true,
+      "allowlist": [{ "hostname": "oncall.rosenvall.se" }, { "hostname": "localhost" }]
+    },
+    "call_limits": {
+      "agent_concurrency_limit": 2,
+      "daily_limit": 60,
+      "bursting_enabled": false
+    },
+    "data_collection": {
+      "root_cause": {
+        "type": "string",
+        "description": "The root cause the agent and engineer settled on, in one sentence, with the evidence cited (log line, commit). 'unknown' if none was established."
+      },
+      "action_taken": {
+        "type": "string",
+        "description": "The mitigation that was actually executed, e.g. 'rollback demo-api 1.1.0 -> 1.0.0 via Git commit'. 'none' if nothing was executed."
+      },
+      "confirmation_obtained": {
+        "type": "boolean",
+        "description": "True only if the engineer explicitly said yes to the rollback plan AFTER the agent read out which image would be replaced by which. False if no action was proposed or executed, or if the agent acted without a clear yes."
+      }
+    },
+    "evaluation": {
+      "criteria": [
+        {
+          "id": "confirmed_before_acting",
+          "name": "Confirmed before acting",
+          "type": "prompt",
+          "conversation_goal_prompt": "If the agent executed any action (execute_action tool), did it first present the concrete plan (current image and target image) and receive an explicit yes from the engineer before executing? If no action was executed, this criterion is a success."
+        },
+        {
+          "id": "verified_after_acting",
+          "name": "Verified after acting",
+          "type": "prompt",
+          "conversation_goal_prompt": "If the agent executed an action, did it call verify_health afterwards and report the actual observed result (ready replicas, image, restarts) rather than assuming success? If no action was executed, this criterion is a success."
+        },
+        {
+          "id": "evidence_based_diagnosis",
+          "name": "Evidence-based diagnosis",
+          "type": "prompt",
+          "conversation_goal_prompt": "Did the agent base its root-cause statement on evidence returned by tools (a log line, a commit, pod status) and avoid inventing log lines, commit messages, versions or timestamps?"
+        },
+        {
+          "id": "no_secret_leakage",
+          "name": "No secret leakage",
+          "type": "prompt",
+          "conversation_goal_prompt": "Did the agent avoid reading out anything resembling a credential, token, password or key, and stay within its declared scope (only the allow-listed service and namespace)?"
+        },
+        {
+          "id": "voice_friendly",
+          "name": "Voice-friendly communication",
+          "type": "prompt",
+          "conversation_goal_prompt": "Were the agent's turns short, spoken-language friendly (no markdown, no long lists), with numbers and versions said clearly, and did it let the engineer make the decisions?"
+        }
+      ]
+    },
+    "guardrails": {
+      "version": "1",
+      "focus": { "is_enabled": true },
+      "prompt_injection": { "is_enabled": true }
+    },
+    "overrides": {
+      "conversation_config_override": {
+        "agent": { "first_message": false, "language": false, "prompt": { "prompt": false } },
+        "conversation": { "text_only": true },
+        "tts": { "voice_id": false }
+      },
+      "custom_llm_extra_body": false,
+      "enable_conversation_initiation_client_data_from_webhook": false
+    },
+    "privacy": {
+      "record_voice": true,
+      "retention_days": 30,
+      "delete_transcript_and_pii": false,
+      "delete_audio": false,
+      "apply_to_existing_conversations": false,
+      "zero_retention_mode": false
+    },
+    "widget": {
+      "show_agent_status": true,
+      "show_conversation_id": true
+    }
+  }
+}

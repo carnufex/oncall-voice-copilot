@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "skills": {
+    "agents": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "agents/SKILL.md",
+      "computedHash": "0c1d787cd10104fca2f68df9759dba8e9aac6bae5eecc6486f792fe73c434c31"
+    },
+    "dubbing": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "dubbing/SKILL.md",
+      "computedHash": "4bb155a789dd86a167a3aca522e1d465897ee8f0235b5a1f1faf4c9349386286"
+    },
+    "music": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "music/SKILL.md",
+      "computedHash": "4822a7da9ff165cf51c4dc55961ec93ec17011bc43d2bffbb4c56a9073d8e8f4"
+    },
+    "setup-api-key": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "setup-api-key/SKILL.md",
+      "computedHash": "3115dc2a4f0c54cc2b27f1b2e5acd161bcdcf7fd46c017924ab3392fb102981c"
+    },
+    "sound-effects": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "sound-effects/SKILL.md",
+      "computedHash": "f76a229156eaa302d0e64159f56055ce733ecf19da768398a6c5b1991ac1d940"
+    },
+    "speech-engine": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "speech-engine/SKILL.md",
+      "computedHash": "baef24089266fec618eb4c6952561b39d247d97f241bf3e5dbb3758e79115fbd"
+    },
+    "speech-to-text": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "speech-to-text/SKILL.md",
+      "computedHash": "226d778de123fe887fca371ed50abbd37eac178b11358ac8c0cb4a54a114676f"
+    },
+    "text-to-speech": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "text-to-speech/SKILL.md",
+      "computedHash": "f406b87e79b95070cc495006adea4c0a7147ffc492aa92ec9c7b71eaa9392c1c"
+    },
+    "update-skills-from-changelog": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/update-skills-from-changelog/SKILL.md",
+      "computedHash": "abe1426ed35d2a3c445a7b2adee9526c98cd0555510cbb21aea2ec7b79d7b765"
+    },
+    "voice-changer": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "voice-changer/SKILL.md",
+      "computedHash": "50d7d166266c3b640ad35d4f2f4096d22b8e3c9670b7edd36aeb8f36f90e01b9"
+    },
+    "voice-isolator": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "voice-isolator/SKILL.md",
+      "computedHash": "6538d412211d292384376ac7e3f6e7c1b38ff72d82c6e7b8ce861afc684c7bc0"
+    }
+  }
+}
