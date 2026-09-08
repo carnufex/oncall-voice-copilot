@@ -66,7 +66,8 @@ export const config = {
   demoGoodTag: optional("DEMO_GOOD_TAG", "1.0.0"),
   demoBadTag: optional("DEMO_BAD_TAG", "1.1.0"),
 
-  detectorIntervalMs: optionalNumber("DETECTOR_INTERVAL_MS", 10000),
+  detectorIntervalMs: optionalNumber("DETECTOR_INTERVAL_MS", 2000),
+  incidentStorePath: raw("INCIDENT_STORE_PATH"),
   actionTtlMs: optionalNumber("ACTION_TTL_MS", 120000),
 
   logLevel: optional("LOG_LEVEL", "info"),

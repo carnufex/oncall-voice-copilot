@@ -1,10 +1,55 @@
 import { randomBytes } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import type { Incident, PendingAction, RollbackPlan, TimelineEntry, TimelineEntryKind } from "./types.js";
 
-// In-memory incident store. Documented limitation: state is lost on restart; this is a demo
-// service with a single replica (see docs/SPEC.md section 2).
+// In-memory incident store with optional file-backed snapshots (INCIDENT_STORE_PATH): the map
+// is the source of truth while running; a snapshot is written every 2 s and on shutdown so a
+// restart (new image, node move) does not lose open incidents mid-call. Single replica only.
 
 const incidents = new Map<string, Incident>();
+let storePath: string | undefined;
+let lastSnapshot = "";
+
+export function initStore(filePath: string | undefined, log: { info: (o: object, m: string) => void; warn: (o: object, m: string) => void }): void {
+  storePath = filePath;
+  if (!storePath) return;
+  try {
+    if (existsSync(storePath)) {
+      const raw = readFileSync(storePath, "utf8");
+      const list = JSON.parse(raw) as Incident[];
+      for (const inc of list) incidents.set(inc.id, inc);
+      lastSnapshot = raw;
+      log.info({ path: storePath, incidents: list.length }, "incident store loaded");
+    } else {
+      mkdirSync(path.dirname(storePath), { recursive: true });
+      log.info({ path: storePath }, "incident store: starting empty");
+    }
+  } catch (err) {
+    log.warn({ err, path: storePath }, "incident store: could not load snapshot, starting empty");
+  }
+  const timer = setInterval(() => persistStore(log), 2000);
+  timer.unref?.();
+  const flush = () => {
+    persistStore(log);
+  };
+  process.on("SIGTERM", flush);
+  process.on("SIGINT", flush);
+}
+
+export function persistStore(log?: { warn: (o: object, m: string) => void }): void {
+  if (!storePath) return;
+  try {
+    const snapshot = JSON.stringify([...incidents.values()]);
+    if (snapshot === lastSnapshot) return;
+    const tmp = `${storePath}.tmp`;
+    writeFileSync(tmp, snapshot, "utf8");
+    renameSync(tmp, storePath);
+    lastSnapshot = snapshot;
+  } catch (err) {
+    log?.warn({ err, path: storePath }, "incident store: snapshot failed");
+  }
+}
 
 const ID_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 

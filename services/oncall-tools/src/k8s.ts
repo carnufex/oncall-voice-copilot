@@ -97,6 +97,10 @@ export function isCrashLooping(pod: V1Pod): boolean {
   if (!cs) return false;
   const waitingReason = cs.state?.waiting?.reason;
   if (waitingReason === "CrashLoopBackOff" || waitingReason === "Error") return true;
+  // First crash: the container has just exited non-zero and kubelet has not yet flipped the
+  // state to CrashLoopBackOff. Catching this shaves the first back-off window off detection.
+  const term = cs.state?.terminated ?? cs.lastState?.terminated;
+  if (term && (term.exitCode ?? 0) !== 0 && !cs.ready) return true;
   if ((cs.restartCount ?? 0) >= 2 && !cs.ready) return true;
   return false;
 }

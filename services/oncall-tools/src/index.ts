@@ -11,10 +11,13 @@ import { slackRoute } from "./routes/slack.js";
 import { apiRoute } from "./routes/api.js";
 import { webhooksRoute } from "./routes/webhooks.js";
 import { startDetector } from "./detector.js";
+import { initStore } from "./store.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const webDist = path.join(__dirname, "web");
 const indexHtmlPath = path.join(webDist, "index.html");
+
+initStore(config.incidentStorePath, logger);
 
 const app = new Hono();
 
