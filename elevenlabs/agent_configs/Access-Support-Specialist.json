@@ -436,9 +436,6 @@
             "allowlist": [
                 {
                     "hostname": "oncall.rosenvall.se"
-                },
-                {
-                    "hostname": "localhost"
                 }
             ],
             "enable_auth": true,
@@ -650,8 +647,15 @@
         "smb_metadata": null,
         "summary_language": "en",
         "testing": {
-            "attached_tests": [],
-            "referenced_tests_ids": []
+            "attached_tests": [
+                {
+                    "test_id": "test_2801m2122wd4efcsjzr492e05rz6",
+                    "workflow_node_id": null
+                }
+            ],
+            "referenced_tests_ids": [
+                "test_2801m2122wd4efcsjzr492e05rz6"
+            ]
         },
         "topic_discovery": {
             "enabled": true

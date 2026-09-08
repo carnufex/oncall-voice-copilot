@@ -4,13 +4,13 @@
             "config": "agent_configs\\On-call-Voice-Copilot.json",
             "id": "agent_1501m20j4f41fv1td9c3mvmkhek8",
             "branch_id": "agtbrch_3001m20j4gjter3ahrn3spdcm4ww",
-            "version_id": "agtvrsn_5001m20yqxe0f3ma1dw72jc7v52f"
+            "version_id": "agtvrsn_1601m214h9pbeg786me3asv9t8c9"
         },
         {
             "config": "agent_configs\\Access-Support-Specialist.json",
             "id": "agent_4801m20wd546enxb46bnfyvw8dmk",
             "branch_id": "agtbrch_5401m20wd6ejeywrqyca22dsqxqp",
-            "version_id": "agtvrsn_6501m2120kj3fvj9d4f19r7qq1rq"
+            "version_id": "agtvrsn_9301m214hc74fj4ve9k6kky2ktag"
         }
     ]
 }

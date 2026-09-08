@@ -1158,9 +1158,6 @@
             "allowlist": [
                 {
                     "hostname": "oncall.rosenvall.se"
-                },
-                {
-                    "hostname": "localhost"
                 }
             ],
             "enable_auth": true,
