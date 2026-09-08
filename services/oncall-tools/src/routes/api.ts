@@ -3,7 +3,7 @@ import { z } from "zod";
 import { config } from "../config.js";
 import { logger } from "../log.js";
 import { addTimelineEntry, createIncident, getIncident, listIncidents, putIncident } from "../store.js";
-import { mintConversationToken } from "../elevenlabs.js";
+import { mintConversationToken, mintSignedUrl } from "../elevenlabs.js";
 import { minutesAgo } from "../spoken.js";
 import type { Incident } from "../types.js";
 
@@ -31,8 +31,13 @@ apiRoute.post("/incidents/:id/session", async (c) => {
   const incident = getIncident(c.req.param("id"));
   if (!incident) return c.json({ error: "incident_not_found" }, 404);
 
-  const token = await mintConversationToken();
-  if (!token) {
+  const requested = await c.req.json().catch(() => ({}));
+  const mode = (requested as { mode?: string }).mode === "text" ? "text" : "voice";
+
+  // Text mode = same agent and tools over a signed WebSocket URL, no audio. Used for rehearsal.
+  const signedUrl = mode === "text" ? await mintSignedUrl() : undefined;
+  const token = mode === "voice" ? await mintConversationToken() : undefined;
+  if ((mode === "voice" && !token) || (mode === "text" && !signedUrl)) {
     return c.json({ error: "elevenlabs_disabled" }, 503);
   }
 
@@ -49,7 +54,8 @@ apiRoute.post("/incidents/:id/session", async (c) => {
     opened_at_local: openedLocal,
   };
 
-  return c.json({ conversation_token: token.conversation_token, dynamic_variables });
+  addTimelineEntry(incident, "call", mode === "text" ? "Text session requested" : "Voice call requested");
+  return c.json({ mode, conversation_token: token?.conversation_token, signed_url: signedUrl, dynamic_variables });
 });
 
 const conversationSchema = z.object({ conversation_id: z.string() });

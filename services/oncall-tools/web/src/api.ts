@@ -19,8 +19,12 @@ export async function fetchIncident(id: string): Promise<Incident> {
   return json<Incident>(res);
 }
 
-export async function startSessionForIncident(id: string): Promise<SessionResponse> {
-  const res = await fetch(`/api/incidents/${id}/session`, { method: "POST" });
+export async function startSessionForIncident(id: string, mode: "voice" | "text" = "voice"): Promise<SessionResponse> {
+  const res = await fetch(`/api/incidents/${id}/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode }),
+  });
   return json<SessionResponse>(res);
 }
 

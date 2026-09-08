@@ -49,6 +49,8 @@ export type Incident = {
 export type IncidentListEntry = Pick<Incident, "id" | "service" | "namespace" | "status" | "opened_at" | "alert">;
 
 export type SessionResponse = {
-  conversation_token: string;
+  mode: "voice" | "text";
+  conversation_token?: string;
+  signed_url?: string;
   dynamic_variables: Record<string, string>;
 };

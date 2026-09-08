@@ -50,6 +50,23 @@ export type ConversationTokenResult = {
 };
 
 /**
+ * Mints a signed WebSocket URL (used for text-only rehearsal sessions):
+ * GET https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=<id>
+ */
+export async function mintSignedUrl(): Promise<string | undefined> {
+  if (!isElevenLabsEnabled()) return undefined;
+  const url = new URL("https://api.elevenlabs.io/v1/convai/conversation/get-signed-url");
+  url.searchParams.set("agent_id", config.elevenlabsAgentId!);
+  const res = await fetch(url, { headers: { "xi-api-key": config.elevenlabsApiKey! } });
+  if (!res.ok) {
+    logger.warn({ status: res.status, body: await res.text().catch(() => "") }, "ElevenLabs signed-url request failed");
+    return undefined;
+  }
+  const body = (await res.json()) as { signed_url?: string };
+  return body.signed_url;
+}
+
+/**
  * Mints a WebRTC conversation token via
  * GET https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=<id>
  * (verified against the installed @elevenlabs/react 1.15.2 / @elevenlabs/client 1.25.0 typings
