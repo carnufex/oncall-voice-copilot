@@ -21,16 +21,20 @@ async function checkDeployment(deployment: string): Promise<void> {
   }
 
   const summary = summarizePod(crashing);
+  // The detector fires on the first crash, when the container is still "terminated (Error)"
+  // rather than "waiting (CrashLoopBackOff)". The incident is the same; name it consistently.
+  const cs = crashing.status?.containerStatuses?.[0];
+  const exitCode = cs?.state?.terminated?.exitCode ?? cs?.lastState?.terminated?.exitCode;
+  const reason = summary.state === "waiting" && summary.reason ? summary.reason : "CrashLoopBackOff";
+  const message =
+    summary.state === "waiting" && summary.message
+      ? // Kubernetes appends "container=... pod=...(uid)" to the back-off message; drop it for speech.
+        summary.message.replace(/\s+container=.*$/, "")
+      : `container exited with code ${exitCode ?? "unknown"} right after start, ${summary.restarts} restart${summary.restarts === 1 ? "" : "s"} so far`;
   const incident = createIncident({
     service: deployment,
     namespace: config.k8sNamespace,
-    alert: {
-      reason: summary.reason ?? "CrashLoopBackOff",
-      // Kubernetes appends "container=... pod=...(uid)" to the back-off message; drop it for speech.
-      message: (summary.message ?? `Pod ${summary.name} is crashlooping`).replace(/\s+container=.*$/, ""),
-      pod: summary.name,
-      restarts: summary.restarts,
-    },
+    alert: { reason, message, pod: summary.name, restarts: summary.restarts },
   });
   addTimelineEntry(
     incident,

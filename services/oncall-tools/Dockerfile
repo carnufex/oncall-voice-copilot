@@ -16,7 +16,7 @@ COPY package.json package-lock.json* ./
 RUN npm install --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 
-RUN addgroup -S oncall && adduser -S oncall -G oncall
+RUN addgroup -S -g 1000 oncall && adduser -S -u 1000 -G oncall oncall
 USER oncall
 
 EXPOSE 8080

@@ -437,6 +437,34 @@ toolsRoute.post(
 );
 
 toolsRoute.post(
+  "/create_ticket",
+  tool(
+    "create_ticket",
+    incidentIdSchema.extend({
+      category: z.string(),
+      summary: z.string(),
+      requester: z.string().optional(),
+    }),
+    async (incident, body) => {
+      // Simulated ticketing system (would be Jira / ServiceNow in production).
+      const ticket_id = `TCK-${Math.floor(1000 + Math.random() * 9000)}`;
+      const requester = body.requester ?? config.oncallEngineerName;
+      const text = `:ticket: Ticket ${ticket_id} (${redact(body.category)}) for ${redact(requester)}: ${redact(body.summary)}`;
+      await postThreadMessage(incident, text);
+      return {
+        json: {
+          ticket_id,
+          category: body.category,
+          status: "open",
+          spoken_summary: `Ticket ${ticket_id.replace("-", " ")} is created for ${requester}: ${body.summary}. It is posted in the incident thread and the access team will pick it up.`,
+        },
+        timeline: { kind: "note" as TimelineEntryKind, title: "create_ticket", detail: `${ticket_id} (${body.category}): ${body.summary}`.slice(0, 200) },
+      };
+    },
+  ),
+);
+
+toolsRoute.post(
   "/add_note",
   tool("add_note", incidentIdSchema.extend({ note: z.string() }), async (incident, body) => {
     await postThreadMessage(incident, `:memo: ${redact(body.note)}`);
