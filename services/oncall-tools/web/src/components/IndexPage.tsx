@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { fetchIncidents } from "../api.js";
 import type { IncidentListEntry } from "../types.js";
 import { StatusPill } from "./StatusPill.js";
+import { CopyChip } from "./CopyChip.js";
+import { minutesAgo, truncate } from "../utils.js";
 
 export function IndexPage() {
   const [incidents, setIncidents] = useState<IncidentListEntry[] | undefined>(undefined);
@@ -26,24 +28,47 @@ export function IndexPage() {
 
       {error && <div className="banner banner-error">{error}</div>}
 
-      {!incidents && !error && <div className="index-empty">Loading…</div>}
+      {!incidents && !error && <div className="index-empty">Loading&hellip;</div>}
 
       {incidents && incidents.length === 0 && (
         <div className="index-empty">
-          No incidents yet. Run <code>/oncall drill</code> in Slack, or wait for the detector.
+          <div className="index-empty-title">No incidents yet</div>
+          <div className="index-empty-body">
+            Run <code>/oncall drill</code> in Slack to start one.
+          </div>
         </div>
       )}
 
       {incidents && incidents.length > 0 && (
-        <ul className="incident-list">
+        <ul className="incident-cards">
           {incidents.map((incident) => (
             <li key={incident.id}>
-              <a className="incident-row" href={`/call/${incident.id}`}>
-                <span className="incident-row-id mono">{incident.id}</span>
-                <span className="incident-row-service">{incident.service}</span>
-                <span className="incident-row-ns mono">{incident.namespace}</span>
-                <span className="incident-row-reason">{incident.alert.reason}</span>
-                <StatusPill status={incident.status} />
+              <a className="incident-card" href={`/call/${incident.id}`}>
+                <div className="incident-card-top">
+                  <span className="incident-card-service">{incident.service}</span>
+                  <StatusPill status={incident.status} />
+                </div>
+                <div className="incident-card-reason">{incident.alert.reason}</div>
+                <div className="incident-card-meta">
+                  <span className="mono">{incident.namespace}</span>
+                  <span>Opened {minutesAgo(incident.opened_at)} min ago</span>
+                </div>
+                {incident.status === "resolved" && incident.root_cause && (
+                  <div className="incident-card-root-cause">
+                    <span className="incident-card-root-cause-label">Root cause</span>
+                    {truncate(incident.root_cause, 120)}
+                  </div>
+                )}
+                <div className="incident-card-bottom">
+                  <span className="incident-card-id mono">{incident.id}</span>
+                  {incident.conversation_id && (
+                    <CopyChip
+                      value={incident.conversation_id}
+                      href={`https://elevenlabs.io/app/agents/history/${incident.conversation_id}`}
+                      title="Conversation id"
+                    />
+                  )}
+                </div>
               </a>
             </li>
           ))}

@@ -1,9 +1,18 @@
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { startSessionForIncident, reportConversationId } from "../api.js";
+import { VoiceOrb, type OrbState } from "./VoiceOrb.js";
 
 type TranscriptTurn = { id: number; source: "ai" | "user"; message: string };
 type SessionMode = "voice" | "text";
+
+// Tool-running is inferred conservatively: the agent SDK only exposes "speaking"/"listening",
+// so a sustained silence (no output audio) while the SDK still reports "speaking" is read as
+// a tool call in flight (model composing / waiting on a tool result before TTS starts). If the
+// signal is ambiguous we always fall back to the plain speaking/listening label — see SPEC.
+const TOOL_SILENCE_MS = 800;
+const AUDIO_ACTIVE_THRESHOLD = 0.02;
+const DERIVE_INTERVAL_MS = 150;
 
 function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; onConversationId: (id: string) => void }) {
   const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
@@ -11,12 +20,19 @@ function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; 
   const [starting, setStarting] = useState(false);
   const [mode, setMode] = useState<SessionMode>("voice");
   const [draft, setDraft] = useState("");
+  const [orbState, setOrbState] = useState<OrbState>("idle");
+  const [statusLabel, setStatusLabel] = useState("Ready");
   const nextId = useRef(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const hasConnectedRef = useRef(false);
+  const modeStartRef = useRef(Date.now());
+  const lastAudioRef = useRef(0);
+  const prevSdkModeRef = useRef<string | undefined>(undefined);
 
   const conversation = useConversation({
     onConnect: ({ conversationId }) => {
+      hasConnectedRef.current = true;
       void reportConversationId(incidentId, conversationId);
       onConversationId(conversationId);
     },
@@ -35,6 +51,66 @@ function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; 
   useEffect(() => {
     if (connected && mode === "text") inputRef.current?.focus();
   }, [connected, mode]);
+
+  // Derived orb state + status label. Voice mode ticks a lightweight interval so the
+  // tool-running heuristic (sustained silence during "speaking") can settle; text mode has
+  // no audio so it maps directly off the SDK's speaking/listening mode.
+  useEffect(() => {
+    if (conversation.status === "connecting") {
+      setOrbState("connecting");
+      setStatusLabel("Ringing…");
+      return;
+    }
+    if (!connected) {
+      if (hasConnectedRef.current) {
+        setOrbState("ended");
+        setStatusLabel("Call ended");
+      } else {
+        setOrbState("idle");
+        setStatusLabel("Ready");
+      }
+      return;
+    }
+    if (mode === "text") {
+      setOrbState(conversation.mode === "speaking" ? "speaking" : "listening");
+      setStatusLabel("Connected (text)");
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      const sdkMode = conversation.mode;
+      if (sdkMode !== prevSdkModeRef.current) {
+        modeStartRef.current = Date.now();
+        prevSdkModeRef.current = sdkMode;
+      }
+      const now = Date.now();
+      let volume = 0;
+      try {
+        volume = conversation.getOutputVolume();
+      } catch {
+        volume = 0;
+      }
+      if (volume > AUDIO_ACTIVE_THRESHOLD) lastAudioRef.current = now;
+
+      if (sdkMode === "listening") {
+        setOrbState("listening");
+        setStatusLabel("Listening");
+        return;
+      }
+      const silentFor = now - lastAudioRef.current;
+      const modeAge = now - modeStartRef.current;
+      if (silentFor > TOOL_SILENCE_MS && modeAge > TOOL_SILENCE_MS) {
+        setOrbState("tool");
+        setStatusLabel("Working…");
+      } else {
+        setOrbState("speaking");
+        setStatusLabel("Speaking");
+      }
+    }, DERIVE_INTERVAL_MS);
+    return () => window.clearInterval(id);
+    // conversation is a stable-ish object from the SDK; status/mode drive re-derivation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, conversation.status, mode, conversation.mode]);
 
   async function handleAnswer() {
     setErrorText(undefined);
@@ -77,44 +153,48 @@ function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; 
     setDraft("");
   }
 
-  const statusKey = connected ? (mode === "text" ? "connected" : conversation.mode) : conversation.status;
-  const statusLabel = connected ? (mode === "text" ? "connected (text)" : conversation.mode) : conversation.status;
   const busy = starting || conversation.status === "connecting";
 
   return (
     <div className="call-panel">
-      <div className="call-panel-controls">
-        {!connected ? (
-          <button className="answer-button" onClick={handleAnswer} disabled={busy}>
-            {busy ? "Connecting…" : mode === "voice" ? "Answer call" : "Start text session"}
-          </button>
-        ) : (
-          <button className="hangup-button" onClick={handleHangUp}>
-            {mode === "voice" ? "Hang up" : "End session"}
-          </button>
-        )}
-        <div className={`call-status call-status-${statusKey}`}>
-          <span className="call-status-dot" />
-          {statusLabel}
+      <div className="call-panel-top">
+        <div className="call-panel-orb">
+          <VoiceOrb state={orbState} getOutputVolume={mode === "voice" ? conversation.getOutputVolume : undefined} size={260} />
+          <div className={`call-status-label call-status-label-${orbState}`}>{statusLabel}</div>
         </div>
-        {!connected && (
-          <div className="mode-toggle" role="radiogroup" aria-label="Session mode">
-            <button type="button" role="radio" aria-checked={mode === "voice"} className={`mode-option${mode === "voice" ? " mode-option-active" : ""}`} onClick={() => setMode("voice")}>
-              Voice
-            </button>
-            <button type="button" role="radio" aria-checked={mode === "text"} className={`mode-option${mode === "text" ? " mode-option-active" : ""}`} onClick={() => setMode("text")} title="Same agent and tools, no audio. For rehearsal.">
-              Text
-            </button>
-          </div>
-        )}
-      </div>
 
-      {errorText && <div className="banner banner-error">{errorText}</div>}
+        <div className="call-panel-controls">
+          {!connected ? (
+            <button className="answer-button" onClick={handleAnswer} disabled={busy}>
+              {busy ? "Connecting…" : mode === "voice" ? "Answer call" : "Start text session"}
+            </button>
+          ) : (
+            <button className="hangup-button" onClick={handleHangUp}>
+              {mode === "voice" ? "Hang up" : "End session"}
+            </button>
+          )}
+          {!connected && (
+            <div className="mode-toggle" role="radiogroup" aria-label="Session mode">
+              <button type="button" role="radio" aria-checked={mode === "voice"} className={`mode-option${mode === "voice" ? " mode-option-active" : ""}`} onClick={() => setMode("voice")}>
+                Voice
+              </button>
+              <button type="button" role="radio" aria-checked={mode === "text"} className={`mode-option${mode === "text" ? " mode-option-active" : ""}`} onClick={() => setMode("text")} title="Same agent and tools, no audio. For rehearsal.">
+                Text
+              </button>
+            </div>
+          )}
+        </div>
+
+        {errorText && <div className="banner banner-error">{errorText}</div>}
+      </div>
 
       <div className="transcript" ref={scrollRef}>
         {transcript.length === 0 && (
           <div className="transcript-empty">
-            {mode === "voice" ? "Transcript will appear here once the call connects." : "Text rehearsal: same agent, same tools, no audio."}
+            <div className="transcript-empty-title">{mode === "voice" ? "No transcript yet" : "Text rehearsal"}</div>
+            <div className="transcript-empty-body">
+              {mode === "voice" ? "Transcript will appear here once the call connects." : "Same agent, same tools, no audio."}
+            </div>
           </div>
         )}
         {transcript.map((turn) => (

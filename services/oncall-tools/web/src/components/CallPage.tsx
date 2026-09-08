@@ -4,12 +4,11 @@ import type { Incident } from "../types.js";
 import { StatusPill } from "./StatusPill.js";
 import { CallPanel } from "./CallPanel.js";
 import { Timeline } from "./Timeline.js";
+import { CopyChip } from "./CopyChip.js";
+import { ChevronLeftIcon } from "./Icons.js";
+import { minutesAgo, formatClock } from "../utils.js";
 
 const POLL_MS = 2000;
-
-function minutesAgo(iso: string): number {
-  return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-}
 
 export function CallPage({ incidentId }: { incidentId: string }) {
   const [incident, setIncident] = useState<Incident | undefined>(undefined);
@@ -43,7 +42,7 @@ export function CallPage({ incidentId }: { incidentId: string }) {
       <div className="call-page call-page-error">
         <div className="banner banner-error">{error === "incident_not_found" ? `No incident found for ${incidentId}.` : error}</div>
         <a className="back-link" href="/">
-          &larr; Back to incidents
+          <ChevronLeftIcon /> Back to incidents
         </a>
       </div>
     );
@@ -52,27 +51,35 @@ export function CallPage({ incidentId }: { incidentId: string }) {
   if (!incident) {
     return (
       <div className="call-page call-page-loading">
+        <div className="orb-loading" aria-hidden="true" />
         <div className="loading-text">Loading incident {incidentId}…</div>
       </div>
     );
   }
 
+  const convId = conversationId ?? incident.conversation_id;
+
   return (
     <div className="call-page">
       <header className="call-header">
-        <a className="back-link" href="/">
-          &larr;
+        <a className="back-link" href="/" aria-label="Back to incidents">
+          <ChevronLeftIcon />
         </a>
         <div className="call-header-main">
           <div className="call-header-title">
             <span className="call-header-service">{incident.service}</span>
             <span className="call-header-ns mono">{incident.namespace}</span>
           </div>
-          <div className="call-header-sub mono">{incident.id}</div>
+          <div className="call-header-chips">
+            <CopyChip value={incident.id} title="Incident id" />
+            {convId && <CopyChip value={convId} href={`https://elevenlabs.io/app/agents/history/${convId}`} title="Conversation id" variant="accent" />}
+          </div>
         </div>
         <div className="call-header-meta">
           <StatusPill status={incident.status} />
-          <span className="call-header-age">Opened {minutesAgo(incident.opened_at)} min ago</span>
+          <span className="call-header-age">
+            Opened {formatClock(incident.opened_at)} &middot; {minutesAgo(incident.opened_at)} min ago
+          </span>
         </div>
       </header>
 
@@ -87,9 +94,7 @@ export function CallPage({ incidentId }: { incidentId: string }) {
 
       <footer className="call-footer">
         <span>ElevenLabs Agents &bull; webhook tools &bull; GitOps rollback &bull; Slack</span>
-        {(conversationId ?? incident.conversation_id) && (
-          <span className="mono call-footer-conv">conversation {conversationId ?? incident.conversation_id}</span>
-        )}
+        {convId && <CopyChip value={convId} href={`https://elevenlabs.io/app/agents/history/${convId}`} variant="accent" />}
       </footer>
     </div>
   );

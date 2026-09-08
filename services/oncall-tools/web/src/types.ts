@@ -46,7 +46,10 @@ export type Incident = {
   pending_actions: Record<string, PendingAction>;
 };
 
-export type IncidentListEntry = Pick<Incident, "id" | "service" | "namespace" | "status" | "opened_at" | "alert">;
+export type IncidentListEntry = Pick<
+  Incident,
+  "id" | "service" | "namespace" | "status" | "opened_at" | "resolved_at" | "alert" | "conversation_id" | "root_cause"
+>;
 
 export type SessionResponse = {
   mode: "voice" | "text";

@@ -16,7 +16,10 @@ apiRoute.get("/incidents", (c) => {
     namespace: i.namespace,
     status: i.status,
     opened_at: i.opened_at,
+    resolved_at: i.resolved_at,
     alert: i.alert,
+    conversation_id: i.conversation_id,
+    root_cause: i.root_cause,
   }));
   return c.json({ incidents });
 });
