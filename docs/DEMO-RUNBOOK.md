@@ -19,6 +19,8 @@ bubble bottom-right.
 
 Tips: hide bookmarks bar, 110 % zoom in the browser, dark theme everywhere, mute notifications,
 headset on. Chrome must already have microphone permission for `oncall.rosenvall.se`.
+Log in to Authentik in that browser beforehand (open `https://oncall.rosenvall.se/` once; the
+SSO cookie lasts 12 h), otherwise the Join button detours through the login page on camera.
 
 ## Before you press record
 

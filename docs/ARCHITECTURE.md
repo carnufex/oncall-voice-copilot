@@ -11,7 +11,7 @@ in the demo is real: a real crash, real logs, a real commit, a real rollout.
 ```mermaid
 flowchart LR
   eng([On-call engineer]) -- "/oncall drill, Join call, voice" --> slack[Slack #elevenlabs]
-  eng -- "browser: voice or text" --> page[Call page<br/>oncall.rosenvall.se/call/:id]
+  eng -- "browser: voice or text" --> sso[oauth2-proxy<br/>Authentik SSO] --> page[Call page<br/>oncall.rosenvall.se/call/:id]
   page -- "WebRTC / WebSocket" --> el[ElevenLabs Agents<br/>On-call Voice Copilot<br/>Access Support Specialist]
   el -- "webhook tools (HTTPS, secret header)" --> be[oncall-tools backend<br/>ns oncall-demo]
   el -- "post-call webhook (HMAC)" --> be
@@ -120,6 +120,7 @@ flowchart TB
     g3[agent tests run before push]
   end
   subgraph backend["Layer 2 · oncall-tools (policy enforcement)"]
+    b0[Authentik SSO via oauth2-proxy for the browser surface]
     b1[shared-secret header, constant-time compare]
     b2[allowlist: namespace + deployment per incident]
     b3[redaction of logs, events, messages]
@@ -203,7 +204,8 @@ flowchart LR
   end
   bw[(Bitwarden Secrets Manager)]
   reg[(registry.rosenvall.se)]
-  tun --> gw --> tools
+  tun --> gw --> oap[oauth2-proxy] --> tools
+  oap -. OIDC .-> authentik[(Authentik)]
   tools --- pvc
   eso --> bw
   eso --> es --> tools
