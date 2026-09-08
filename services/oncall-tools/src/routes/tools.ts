@@ -474,6 +474,41 @@ toolsRoute.post(
 );
 
 toolsRoute.post(
+  "/send_reset_link",
+  tool(
+    "send_reset_link",
+    incidentIdSchema.extend({
+      account_system: z.string(),
+      requester: z.string().optional(),
+    }),
+    async (incident, body) => {
+      // Simulated identity-provider action (would call Authentik's recovery flow in production).
+      // The agent never sees or sets a password; it only triggers a time-limited reset email.
+      const requester = body.requester ?? config.oncallEngineerName;
+      const local = requester.split(/\s+/)[0]?.toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
+      const masked_email = `${local.charAt(0)}${"•".repeat(Math.max(3, local.length - 1))}@rosenvall.se`;
+      const expires_in_minutes = 15;
+      const reference = `RST-${Math.floor(1000 + Math.random() * 9000)}`;
+      await postThreadMessage(
+        incident,
+        `:envelope: Password reset link sent to ${masked_email} for ${redact(requester)} (${redact(body.account_system)}), ref ${reference}, expires in ${expires_in_minutes} min. Simulated identity-provider action.`,
+      );
+      return {
+        json: {
+          status: "sent",
+          reference,
+          masked_email,
+          account_system: body.account_system,
+          expires_in_minutes,
+          spoken_summary: `A reset link for ${body.account_system} is on its way to the registered email, which starts with ${local.charAt(0).toUpperCase()} and ends with rosenvall dot se. It expires in ${expires_in_minutes} minutes and multi-factor stays as it is. Reference ${reference.replace("-", " ")}.`,
+        },
+        timeline: { kind: "note" as TimelineEntryKind, title: "send_reset_link", detail: `${reference}: reset link sent to ${masked_email} (${body.account_system}), expires in ${expires_in_minutes} min` },
+      };
+    },
+  ),
+);
+
+toolsRoute.post(
   "/add_note",
   tool("add_note", incidentIdSchema.extend({ note: z.string() }), async (incident, body) => {
     await postThreadMessage(incident, `:memo: ${redact(body.note)}`);
