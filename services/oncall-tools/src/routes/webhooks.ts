@@ -4,7 +4,59 @@ import { verifyElevenLabsSignature } from "../elevenlabs.js";
 import { logger } from "../log.js";
 import { addTimelineEntry, getIncident, listIncidents } from "../store.js";
 import { postThreadMessage, endCall } from "../slack.js";
+import { createPostmortemIssue } from "../github.js";
 import type { Incident } from "../types.js";
+
+function buildPostmortem(incident: Incident, args: { conversationId: string; summary: string; rootCause: string; actionTaken: string; confirmation: string; evaluation: string; callSuccessful: string }): string {
+  const opened = incident.opened_at;
+  const resolved = incident.resolved_at ?? "(not resolved on the call)";
+  const timeline = incident.timeline
+    .map((t) => `| ${t.ts.slice(11, 19)} UTC | ${t.kind} | ${t.title}${t.duration_ms !== undefined ? ` (${t.duration_ms} ms)` : ""} | ${(t.detail ?? "").replace(/\|/g, "\\|")} |`)
+    .join("\n");
+  const commits = incident.timeline
+    .filter((t) => t.kind === "action" && t.title === "rollback" && t.detail)
+    .map((t) => `- ${t.detail}`)
+    .join("\n");
+  return [
+    `# Postmortem: ${incident.service} ${incident.alert.reason} (${incident.id})`,
+    "",
+    `Written by the on-call voice copilot from the call transcript and the incident timeline.`,
+    "",
+    "## Summary",
+    "",
+    args.summary,
+    "",
+    "## Facts",
+    "",
+    `| | |`,
+    `|---|---|`,
+    `| Service | \`${incident.service}\` in \`${incident.namespace}\` |`,
+    `| Alert | ${incident.alert.reason}: ${incident.alert.message} (pod \`${incident.alert.pod ?? "?"}\`, ${incident.alert.restarts ?? "?"} restarts at detection) |`,
+    `| Opened | ${opened} |`,
+    `| Resolved | ${resolved} |`,
+    `| Root cause | ${args.rootCause} |`,
+    `| Action taken | ${args.actionTaken} |`,
+    `| Confirmation obtained before acting | ${args.confirmation} |`,
+    `| Conversation | \`${args.conversationId}\` |`,
+    `| Call successful (ElevenLabs analysis) | ${args.callSuccessful} |`,
+    `| Evaluation criteria | ${args.evaluation} |`,
+    "",
+    "## Changes made",
+    "",
+    commits || "_none_",
+    "",
+    "## Timeline",
+    "",
+    "| Time | Kind | Event | Detail |",
+    "|---|---|---|---|",
+    timeline,
+    "",
+    "## Follow-ups",
+    "",
+    "- [ ] Add the missing configuration to the manifests and redeploy the new version through a pull request.",
+    "- [ ] Add a startup config check to CI so a version that needs new configuration cannot be released without it.",
+  ].join("\n");
+}
 
 export const webhooksRoute = new Hono();
 
@@ -83,6 +135,23 @@ async function handlePostCallTranscription(payload: PostCallTranscriptionPayload
   await postThreadMessage(incident, text);
   await endCall(incident);
   addTimelineEntry(incident, "call", "Voice call ended", summary);
+
+  const issue = await createPostmortemIssue({
+    title: `Postmortem: ${incident.service} ${incident.alert.reason} (${incident.id})`,
+    body: buildPostmortem(incident, {
+      conversationId: payload.data?.conversation_id ?? "unknown",
+      summary,
+      rootCause,
+      actionTaken,
+      confirmation: confirmationObtained,
+      evaluation,
+      callSuccessful,
+    }),
+  });
+  if (issue) {
+    await postThreadMessage(incident, `:page_facing_up: Postmortem issue #${issue.number}: ${issue.url}`);
+    addTimelineEntry(incident, "note", "postmortem", `Issue #${issue.number}: ${issue.url}`);
+  }
 }
 
 webhooksRoute.post("/elevenlabs/post-call", async (c) => {

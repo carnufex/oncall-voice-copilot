@@ -143,6 +143,29 @@ export async function listRecentImageCommits(count: number): Promise<CommitHisto
   return entries;
 }
 
+/**
+ * Opens a postmortem issue in POSTMORTEM_REPO. Returns undefined (and logs) when GitHub is
+ * disabled or the token lacks Issues permission, so the call flow never depends on it.
+ */
+export async function createPostmortemIssue(params: { title: string; body: string; labels?: string[] }): Promise<{ number: number; url: string } | undefined> {
+  const octokit = getClient();
+  if (!octokit || !config.postmortemEnabled) return undefined;
+  const [pmOwner, pmRepo] = config.postmortemRepo.split("/");
+  try {
+    const { data } = await octokit.issues.create({
+      owner: pmOwner!,
+      repo: pmRepo!,
+      title: params.title,
+      body: params.body,
+      labels: params.labels ?? ["postmortem", "oncall-copilot"],
+    });
+    return { number: data.number, url: data.html_url };
+  } catch (err) {
+    logger.warn({ err: (err as Error).message, repo: config.postmortemRepo }, "postmortem issue not created (token may lack Issues: write)");
+    return undefined;
+  }
+}
+
 async function getFileAtRef(octokit: Octokit, ref: string): Promise<string | undefined> {
   try {
     const { data } = await octokit.repos.getContent({ owner: owner!, repo: repo!, path: config.gitopsFile, ref });

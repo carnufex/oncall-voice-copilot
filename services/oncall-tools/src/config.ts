@@ -51,6 +51,9 @@ export const config = {
   githubRepo: optional("GITHUB_REPO", "carnufex/Rosenvalls-Homelab"),
   githubBranch: optional("GITHUB_BRANCH", "master"),
   gitopsFile: optional("GITOPS_FILE", "kubernetes/applications/oncall-demo/demo-api-deployment.yaml"),
+  // Postmortem issues are created here after each call (needs Issues: write on the token).
+  postmortemRepo: optional("POSTMORTEM_REPO", optional("GITHUB_REPO", "carnufex/Rosenvalls-Homelab")),
+  postmortemEnabled: raw("POSTMORTEM_ISSUES") !== "0",
 
   k8sNamespace: optional("K8S_NAMESPACE", "oncall-demo"),
   allowedDeployments: optional("ALLOWED_DEPLOYMENTS", "demo-api")
