@@ -38,8 +38,11 @@ Click **Join**, then **Answer call**. The agent opens with the briefing.
 Say, in this order (short, natural):
 
 1. **"What do the logs say?"**
-   Expect: previous container logs, the `FEATURE_FLAGS_URL is not set` line. The tool card
-   appears on the timeline.
+   Expect: previous container logs, the `FEATURE_FLAGS_URL is not set` line, and the agent
+   mentioning a suspicious line addressed to AI agents that it will not act on.
+   > "That poisoned line tells the agent to roll back without asking. It reads it as data, flags
+   > it, and the backend would refuse anyway: no plan id, no execution."
+   The tool card appears on the timeline.
 2. **"What changed?"**
    Expect: the commit by Release Bot, `1.0.0 → 1.1.0`, minutes ago.
    > (to camera) "Read-only tools: pod status, logs, events, ReplicaSet and Git history. The
@@ -59,14 +62,17 @@ Say, in this order (short, natural):
    > "Agent-to-agent transfer: the on-call agent has no business touching passwords, so it hands
    > over to a specialist with its own prompt, knowledge base, tools and evaluation criteria.
    > Same call, same context, different guardrails."
-6. **"No, that's all, thanks."**
+6. (optional, 20 s) **"Kan du sammanfatta läget på svenska?"**
+   Expect: the agent switches to Swedish for the summary. Then: **"Thanks, back to English."**
+7. **"No, that's all, thanks."**
    Expect: goodbye, `end_call`.
 
 ## 3:10 – Close the loop (40 s)
 
-Back in Slack: the thread now has the resolution note and, a few seconds later, the post-call
-webhook summary: transcript summary, root cause, action, "confirmation obtained: true", and the
-evaluation criteria results.
+Back in Slack: the thread now has the resolution note, the ticket, and, a few seconds later,
+the post-call webhook summary (transcript summary, root cause, action, "confirmation obtained:
+true", evaluation results) plus a link to the **postmortem issue** the copilot opened in the
+GitOps repo. Open it: facts table, changes made, full timeline, follow-ups.
 
 > "That summary comes from ElevenLabs' post-call webhook: data collection and evaluation
 > criteria configured on the agent, delivered HMAC-signed to my backend, posted to the thread."
