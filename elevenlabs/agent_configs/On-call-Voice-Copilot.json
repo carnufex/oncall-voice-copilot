@@ -1420,22 +1420,7 @@
             },
             "custom": {
                 "config": {
-                    "configs": [
-                        {
-                            "evaluate_full_response_only": false,
-                            "execution_mode": "blocking",
-                            "history_include_tool_calls": false,
-                            "history_message_count": 3,
-                            "is_enabled": true,
-                            "model": "gemini-2.5-flash-lite",
-                            "name": "No claimed changes without a tool result",
-                            "prompt": "Block any agent response that states or implies a rollback, deployment, commit or reset has been executed, or that the service is healthy again, unless a tool result in the conversation (execute_action with status executed, or verify_health with healthy true) confirms it.",
-                            "trigger_action": {
-                                "feedback": "You claimed a change or a recovery that no tool result confirms. Only report what the tools returned. Reason: {{trigger_reason}}",
-                                "type": "retry"
-                            }
-                        }
-                    ]
+                    "configs": []
                 }
             },
             "focus": {

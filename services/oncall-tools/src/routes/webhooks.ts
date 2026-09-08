@@ -64,6 +64,9 @@ type PostCallTranscriptionPayload = {
   type: string;
   data?: {
     conversation_id?: string;
+    status?: string;
+    transcript?: { role?: string; message?: string | null }[];
+    metadata?: { call_duration_secs?: number; termination_reason?: string };
     conversation_initiation_client_data?: { dynamic_variables?: Record<string, unknown> };
     analysis?: {
       transcript_summary?: string;
@@ -113,6 +116,16 @@ async function handlePostCallTranscription(payload: PostCallTranscriptionPayload
   }
   if (payload.data?.conversation_id && !incident.conversation_id) {
     incident.conversation_id = payload.data.conversation_id;
+  }
+
+  // A call that failed before anyone spoke (platform error, guardrail misfire, dropped WebRTC)
+  // gets a short thread note and no postmortem.
+  const spokenTurns = (payload.data?.transcript ?? []).filter((t) => t.message && t.message.trim().length > 0).length;
+  if (payload.data?.status === "failed" || spokenTurns < 2) {
+    const reason = payload.data?.metadata?.termination_reason ?? payload.data?.status ?? "unknown";
+    await postThreadMessage(incident, `:warning: Call \`${payload.data?.conversation_id ?? "unknown"}\` ended before it started (${reason}). No postmortem created.`);
+    addTimelineEntry(incident, "call", "Voice call failed", reason.slice(0, 200));
+    return;
   }
 
   const analysis = payload.data?.analysis;

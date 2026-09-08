@@ -50,7 +50,6 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
 | Client tools: the agent drives the call page (`show_diff` renders the offending commit's diff while it explains; `clear_screen`) | `services/oncall-tools/web/`, `elevenlabs/tool_configs/` |
 | Knowledge base with crawled external sources (Kubernetes and Argo CD docs) and source attribution on answers | agent config `knowledge_base`, `conversation.source_attribution` |
 | Continuity across incidents: earlier incidents for the same service are passed as a dynamic variable, so the agent opens with "this is the second time; last time a rollback fixed it" | `services/oncall-tools/src/routes/api.ts` |
-| Custom platform guardrail: the agent may not claim a change or a recovery that no tool result confirms | agent config `platform_settings.guardrails.custom` |
 | Agent-to-agent transfer: password/access requests hand over to the **Access Support Specialist** (own voice, prompt, KB, `send_reset_link` + `create_ticket` tools, own evaluation criteria) on the same call | agent config `built_in_tools.transfer_to_agent`, `elevenlabs/agent_configs/` |
 | Post-call webhook, HMAC-verified, closing the loop in Slack | `services/oncall-tools/src/routes/webhooks.ts` |
 | React SDK (`@elevenlabs/react`, WebRTC) with a conversation token minted server-side | `services/oncall-tools/web/` |

@@ -146,6 +146,8 @@ export async function endCall(incident: Incident): Promise<void> {
   try {
     await c.calls.end({ id: incident.slack.call_id });
   } catch (err) {
+    const code = (err as { data?: { error?: string } }).data?.error;
+    if (code === "inactive_call") return; // already ended
     logger.warn({ err }, "Failed to end Slack call");
   }
 }
