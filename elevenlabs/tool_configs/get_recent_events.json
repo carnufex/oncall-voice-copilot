@@ -1,0 +1,70 @@
+{
+    "api_schema": {
+        "auth_connection": null,
+        "auth_resolved_params": [],
+        "content_type": "application/json",
+        "kind": "webhook",
+        "method": "POST",
+        "path_params_schema": {},
+        "query_params_schema": null,
+        "request_body_schema": {
+            "description": "",
+            "dynamic_variable": "",
+            "is_omitted": false,
+            "properties": {
+                "incident_id": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "",
+                    "dynamic_variable": "incident_id",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                },
+                "limit": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "Max events to return, 5 to 15. Default 10.",
+                    "dynamic_variable": "",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "incident_id"
+            ],
+            "type": "object"
+        },
+        "request_headers": {
+            "X-Oncall-Token": {
+                "secret_id": "FvSewm1xvcgAQ4WPhwmk"
+            }
+        },
+        "response_body_schema": null,
+        "response_filter": null,
+        "url": "https://oncall.rosenvall.se/tools/get_recent_events"
+    },
+    "assignments": [],
+    "description": "Get recent Kubernetes events for the service's pods and replicasets (scheduling, image pull, probe failures, OOM kills). Use only when logs are empty or the failure is not a process exit.",
+    "disable_interruptions": false,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "follow_redirects": false,
+    "follow_redirects_allowed_domains": [],
+    "force_pre_tool_speech": false,
+    "interruption_mode": "allow",
+    "name": "get_recent_events",
+    "pre_tool_speech": "auto",
+    "response_timeout_secs": 15,
+    "tool_call_sound": null,
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "type": "webhook"
+}

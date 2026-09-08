@@ -1,3 +1,54 @@
 {
-    "tools": []
+    "tools": [
+        {
+            "type": "webhook",
+            "config": "tool_configs\\resolve_incident.json",
+            "id": "tool_0501m20j4gk5e03bmpbmw2q4k0vj"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\execute_action.json",
+            "id": "tool_1201m20j4gk3fhybh43fmqadgvqc"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\verify_health.json",
+            "id": "tool_2301m20j4gk4f179akmax0xz576a"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\get_incident.json",
+            "id": "tool_4001m20j4gjxfnzr35rfwqhvvn34"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\get_pod_status.json",
+            "id": "tool_6601m20j4gjyebbv5szrdqhsm59w"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\propose_action.json",
+            "id": "tool_7201m20j4gk2eg0vy758jnggqs9h"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\add_note.json",
+            "id": "tool_8401m20j4gk6e4fab0npnsgsxkzw"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\get_pod_logs.json",
+            "id": "tool_8701m20j4gjzesxvd3qdgvq5fjra"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\get_recent_events.json",
+            "id": "tool_9201m20j4gk1f349nmd9mhxw4z2k"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs\\get_recent_changes.json",
+            "id": "tool_9301m20j4gk0fjmty5p97afha7p9"
+        }
+    ]
 }

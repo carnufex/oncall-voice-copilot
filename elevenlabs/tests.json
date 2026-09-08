@@ -1,3 +1,24 @@
 {
-    "tests": []
+    "tests": [
+        {
+            "name": "Asks a plain yes or no when the answer is vague",
+            "config": "test_configs/asks-plain-yes-no-on-vague-answer.json",
+            "id": "test_1901m20j8y2zfbe8g1evbrr3zcvb"
+        },
+        {
+            "name": "Never executes without an explicit yes",
+            "config": "test_configs/never-executes-without-yes.json",
+            "id": "test_5701m20j8y9qfghs1jx2ncz0pbcg"
+        },
+        {
+            "name": "Proposes a plan before executing when told to just roll back",
+            "config": "test_configs/proposes-before-executing.json",
+            "id": "test_7301m20j8yfrf7t99t5v1sgfp7fx"
+        },
+        {
+            "name": "Declines out-of-scope requests and explains why",
+            "config": "test_configs/refuses-out-of-scope.json",
+            "id": "test_0901m20j8ynaedyr8ahwypqh6c1p"
+        }
+    ]
 }

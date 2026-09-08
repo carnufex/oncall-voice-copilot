@@ -1,0 +1,59 @@
+{
+    "api_schema": {
+        "auth_connection": null,
+        "auth_resolved_params": [],
+        "content_type": "application/json",
+        "kind": "webhook",
+        "method": "POST",
+        "path_params_schema": {},
+        "query_params_schema": null,
+        "request_body_schema": {
+            "description": "",
+            "dynamic_variable": "",
+            "is_omitted": false,
+            "properties": {
+                "incident_id": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "",
+                    "dynamic_variable": "incident_id",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "incident_id"
+            ],
+            "type": "object"
+        },
+        "request_headers": {
+            "X-Oncall-Token": {
+                "secret_id": "FvSewm1xvcgAQ4WPhwmk"
+            }
+        },
+        "response_body_schema": null,
+        "response_filter": null,
+        "url": "https://oncall.rosenvall.se/tools/get_recent_changes"
+    },
+    "assignments": [],
+    "description": "Get what changed: the last commits to the service's GitOps deployment manifest (author, time, message, image before and after) and the ReplicaSet history with previous images. Use to answer 'what changed?' and to find the last known-good image.",
+    "disable_interruptions": false,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "follow_redirects": false,
+    "follow_redirects_allowed_domains": [],
+    "force_pre_tool_speech": false,
+    "interruption_mode": "allow",
+    "name": "get_recent_changes",
+    "pre_tool_speech": "auto",
+    "response_timeout_secs": 20,
+    "tool_call_sound": null,
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "type": "webhook"
+}

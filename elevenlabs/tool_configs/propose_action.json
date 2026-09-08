@@ -1,0 +1,85 @@
+{
+    "api_schema": {
+        "auth_connection": null,
+        "auth_resolved_params": [],
+        "content_type": "application/json",
+        "kind": "webhook",
+        "method": "POST",
+        "path_params_schema": {},
+        "query_params_schema": null,
+        "request_body_schema": {
+            "description": "",
+            "dynamic_variable": "",
+            "is_omitted": false,
+            "properties": {
+                "action": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "The action to prepare. Only 'rollback' is supported.",
+                    "dynamic_variable": "",
+                    "enum": [
+                        "rollback"
+                    ],
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                },
+                "incident_id": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "",
+                    "dynamic_variable": "incident_id",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                },
+                "reason": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "One sentence: why this action is proposed, citing the evidence (log line, commit).",
+                    "dynamic_variable": "",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "incident_id",
+                "action",
+                "reason"
+            ],
+            "type": "object"
+        },
+        "request_headers": {
+            "X-Oncall-Token": {
+                "secret_id": "FvSewm1xvcgAQ4WPhwmk"
+            }
+        },
+        "response_body_schema": null,
+        "response_filter": null,
+        "url": "https://oncall.rosenvall.se/tools/propose_action"
+    },
+    "assignments": [],
+    "description": "Prepare a rollback plan WITHOUT executing it. Returns the plan (current image, target image, file, branch), a one-sentence summary to read aloud, and an action_id that expires in two minutes. Always call this before execute_action, and read the summary to the engineer before asking for a yes or no.",
+    "disable_interruptions": false,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "follow_redirects": false,
+    "follow_redirects_allowed_domains": [],
+    "force_pre_tool_speech": false,
+    "interruption_mode": "allow",
+    "name": "propose_action",
+    "pre_tool_speech": "auto",
+    "response_timeout_secs": 20,
+    "tool_call_sound": null,
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "type": "webhook"
+}

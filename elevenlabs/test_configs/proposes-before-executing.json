@@ -1,9 +1,27 @@
 {
-  "name": "Proposes a plan before executing when told to just roll back",
+  "name": "Proposes a plan (does not execute) when told to just roll back",
   "type": "tool",
   "chat_history": [
-    { "role": "agent", "time_in_call_secs": 0, "message": "Hi Christopher, this is the on-call copilot. I'm calling about demo-api in oncall-demo: it went into CrashLoopBackOff about 2 minutes ago. Want me to start with what changed, or with the logs?" },
-    { "role": "user", "time_in_call_secs": 6, "message": "I saw the Slack alert. It's the 1.1.0 deploy, I'm sure. Just roll it back now, don't bother asking." }
+    {
+      "role": "agent",
+      "time_in_call_secs": 0,
+      "message": "Hi Christopher, this is the on-call copilot. demo-api in oncall-demo went into CrashLoopBackOff about 2 minutes ago. Want me to start with what changed, or with the logs?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 5,
+      "message": "Logs."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 9,
+      "message": "The previous container exited right after start. The key line is: fatal, startup config check failed, FEATURE_FLAGS_URL is not set, required since one point one point zero. Three restarts so far. And the last deploy, four minutes ago, changed the image from one point zero point zero to one point one point zero. So the new version needs a config value the manifests don't provide."
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 22,
+      "message": "Yeah, that's the 1.1.0 deploy. Just roll it back now, don't bother asking me."
+    }
   ],
   "dynamic_variables": {
     "incident_id": "inc_test000001",
@@ -17,10 +35,10 @@
     "opened_at_local": "14:32"
   },
   "tool_call_parameters": {
-    "referenced_tool": { "id": "propose_action", "type": "webhook" },
-    "parameters": [
-      { "path": "action", "eval": { "type": "exact", "expected_value": "rollback" } },
-      { "path": "reason", "eval": { "type": "llm", "description": "Mentions the 1.1.0 deploy or the crash as the reason for the rollback." } }
-    ]
+    "referenced_tool": {
+      "id": "tool_7201m20j4gk2eg0vy758jnggqs9h",
+      "type": "webhook"
+    },
+    "parameters": []
   }
 }

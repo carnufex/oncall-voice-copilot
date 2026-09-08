@@ -1,0 +1,83 @@
+{
+    "api_schema": {
+        "auth_connection": null,
+        "auth_resolved_params": [],
+        "content_type": "application/json",
+        "kind": "webhook",
+        "method": "POST",
+        "path_params_schema": {},
+        "query_params_schema": null,
+        "request_body_schema": {
+            "description": "",
+            "dynamic_variable": "",
+            "is_omitted": false,
+            "properties": {
+                "action_taken": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "One sentence: what was done, e.g. 'rolled back demo-api from 1.1.0 to 1.0.0 via Git commit abc1234'.",
+                    "dynamic_variable": "",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                },
+                "incident_id": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "",
+                    "dynamic_variable": "incident_id",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                },
+                "root_cause": {
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "description": "One sentence root cause, with the evidence.",
+                    "dynamic_variable": "",
+                    "enum": null,
+                    "is_omitted": false,
+                    "is_system_provided": false,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "incident_id",
+                "root_cause",
+                "action_taken"
+            ],
+            "type": "object"
+        },
+        "request_headers": {
+            "X-Oncall-Token": {
+                "secret_id": "FvSewm1xvcgAQ4WPhwmk"
+            }
+        },
+        "response_body_schema": null,
+        "response_filter": null,
+        "url": "https://oncall.rosenvall.se/tools/resolve_incident"
+    },
+    "assignments": [],
+    "description": "Mark the incident resolved with the root cause and the action taken. Posts a note to the Slack thread and ends the Slack call card. Call once health is verified, before ending the call.",
+    "disable_interruptions": false,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "follow_redirects": false,
+    "follow_redirects_allowed_domains": [],
+    "force_pre_tool_speech": false,
+    "interruption_mode": "allow",
+    "name": "resolve_incident",
+    "pre_tool_speech": "auto",
+    "response_timeout_secs": 15,
+    "tool_call_sound": null,
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "type": "webhook"
+}
