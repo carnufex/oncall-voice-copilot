@@ -149,7 +149,8 @@ async function getFileAtRef(octokit: Octokit, ref: string): Promise<string | und
     if (Array.isArray(data) || data.type !== "file" || !data.content) return undefined;
     return Buffer.from(data.content, "base64").toString("utf8");
   } catch (err) {
-    logger.warn({ err, ref }, "Failed to read GITOPS_FILE at ref");
+    // Expected for the commit that created the file (no parent version); not worth a warning.
+    logger.debug({ err: (err as Error).message, ref }, "GITOPS_FILE not readable at ref");
     return undefined;
   }
 }

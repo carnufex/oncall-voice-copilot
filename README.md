@@ -162,6 +162,12 @@ explanation, because the tool runtime hides non-2xx bodies from the model.
 - Only one action type (`rollback`) and one allow-listed service. Adding a service is one env var
   plus the RBAC label selector.
 - GitHub Actions is disabled on this account; images are built and pushed locally.
+- ElevenLabs CLI 1.2.0: `agents push` fails local schema validation on `dynamic_variables`
+  (`Schema 'DynamicVariablesConfig-Input' not found`). Until that is fixed upstream, the agent is
+  updated with a `PATCH /v1/convai/agents/{id}` carrying only the changed fields, then
+  `elevenlabs agents pull --update` keeps the repo in sync. `tools`/`tests` push and pull work.
+- Slack `calls.add` needs `created_by` with a bot token; the backend uses the user who ran the
+  last `/oncall drill`, else `SLACK_CALL_CREATED_BY`.
 
 ## What I would do next
 
@@ -179,3 +185,7 @@ explanation, because the tool runtime hides non-2xx bodies from the model.
   history; `execute_action` and the one-shot/expiry rules behaved as specified.
 - ElevenLabs tests: 4/4 unit tests passing; end-to-end simulation against the live tools passing
   (logs → changes → propose → yes → execute → truthful report → end call).
+- Full write path: `propose_action` → `execute_action` produced commit `44112ad` (author
+  `oncall-copilot`), ArgoCD applied it in 12 s, `verify_health` reported 1/1 on 1.0.0.
+- Slack: alert + call card posted to `#elevenlabs`, thread notes and resolution posted, call ended
+  on resolve (bot `oncall_copilot`, scopes `commands, calls:write, chat:write, chat:write.public`).
