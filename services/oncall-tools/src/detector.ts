@@ -36,12 +36,7 @@ async function checkDeployment(deployment: string): Promise<void> {
     namespace: config.k8sNamespace,
     alert: { reason, message, pod: summary.name, restarts: summary.restarts },
   });
-  addTimelineEntry(
-    incident,
-    "alert",
-    incident.alert.reason,
-    `${summary.name}: ${summary.restarts} restarts, ${incident.alert.message}`,
-  );
+  addTimelineEntry(incident, "alert", incident.alert.reason, `${summary.name}: ${incident.alert.message}`);
   logger.info({ incident_id: incident.id, deployment, pod: summary.name }, "detector: opened incident");
 
   await postAlert(incident);
