@@ -12,6 +12,10 @@ resources:
   - demo-api-deployment.yaml     # the victim; image tag is changed only via Git
   - demo-api-service.yaml
   - tools-service.yaml
+  - tools-pvc.yaml                # incident snapshot volume for the tool backend
   # --- step 2: tool backend + public route ---
   - tools-deployment.yaml
-  - tools-httproute.yaml        # oncall.rosenvall.se via gateway/external
+  - tools-oauth2-proxy-externalsecret.yaml
+  - tools-oauth2-proxy-deployment.yaml   # Authentik SSO in front of the browser surface
+  - tools-oauth2-proxy-service.yaml
+  - tools-httproute.yaml        # oncall.rosenvall.se -> oauth2-proxy -> oncall-tools

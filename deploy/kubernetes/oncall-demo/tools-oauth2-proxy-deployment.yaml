@@ -1,0 +1,70 @@
+# Authentik SSO in front of the on-call copilot's browser surface (call page + /api).
+# Machine-to-machine paths keep their own authentication and bypass the proxy's
+# session check: /tools/* (ElevenLabs, secret header), /slack/* (Slack signature),
+# /webhooks/* (ElevenLabs HMAC), /healthz. Same oauth2-proxy pattern as media/seerr.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-tools-oauth2-proxy
+  namespace: oncall-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oncall-tools-oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: oncall-tools-oauth2-proxy
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.4@sha256:b1b2021fe8f4004573e8d690dec6c7bb29cc44364572cf8510a05bf3a0ae2ded
+          imagePullPolicy: IfNotPresent
+          args:
+            - --provider=oidc
+            - --oidc-issuer-url=https://authentik.rosenvall.se/application/o/oncall-tools/
+            - --insecure-oidc-allow-unverified-email=true
+            - --email-domain=*
+            - --http-address=0.0.0.0:4180
+            - --redirect-url=https://oncall.rosenvall.se/oauth2/callback
+            - --upstream=http://oncall-tools.oncall-demo.svc.cluster.local:8080
+            - --reverse-proxy=true
+            - --cookie-secure=true
+            - --cookie-samesite=lax
+            - --cookie-expire=12h
+            - --set-xauthrequest=true
+            - --skip-provider-button=true
+            # Machine-to-machine endpoints authenticate themselves (token / signatures).
+            - --skip-auth-route=^/tools/
+            - --skip-auth-route=^/slack/
+            - --skip-auth-route=^/webhooks/
+            - --skip-auth-route=^/healthz$
+          env:
+            - name: OAUTH2_PROXY_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: oncall-tools-oauth2-proxy, key: client-id } }
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: oncall-tools-oauth2-proxy, key: client-secret } }
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom: { secretKeyRef: { name: oncall-tools-oauth2-proxy, key: cookie-secret } }
+          ports:
+            - name: http
+              containerPort: 4180
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+            readOnlyRootFilesystem: true
+          readinessProbe: { httpGet: { path: /ping, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /ping, port: http }, initialDelaySeconds: 10, periodSeconds: 30 }
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 256Mi }

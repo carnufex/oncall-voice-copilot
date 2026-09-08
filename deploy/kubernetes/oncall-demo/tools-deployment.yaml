@@ -23,11 +23,16 @@ spec:
         app.kubernetes.io/name: oncall-tools
     spec:
       serviceAccountName: oncall-tools
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
       imagePullSecrets:
         - name: oncall-demo-registry
       containers:
         - name: oncall-tools
-          image: registry.rosenvall.se/carnufex/oncall-tools:sha-bd89053
+          image: registry.rosenvall.se/carnufex/oncall-tools:sha-ea6f6d8
           imagePullPolicy: IfNotPresent
           ports:
             - { name: http, containerPort: 8080 }
@@ -42,6 +47,11 @@ spec:
             - { name: GITHUB_BRANCH, value: master }
             - { name: GITOPS_FILE, value: kubernetes/applications/oncall-demo/demo-api-deployment.yaml }
             - { name: ONCALL_ENGINEER_NAME, value: Christopher }
+            # Slack user used as created_by on call cards when no /oncall drill user is known.
+            - { name: SLACK_CALL_CREATED_BY, value: U0BCQRH011P }
+            - { name: LOCAL_TIMEZONE, value: Europe/Stockholm }
+            - { name: DETECTOR_INTERVAL_MS, value: "2000" }
+            - { name: INCIDENT_STORE_PATH, value: /data/incidents.json }
             - { name: LOG_LEVEL, value: info }
           envFrom:
             - secretRef: { name: oncall-tools-secrets }
@@ -59,3 +69,9 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { cpu: 500m, memory: 512Mi }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: oncall-tools-data

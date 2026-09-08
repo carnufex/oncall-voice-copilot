@@ -1,0 +1,16 @@
+# Tiny volume for the tool backend's incident snapshot (INCIDENT_STORE_PATH), so a
+# rollout or node move does not lose open incidents mid-call. Longhorn RWO, mounted
+# by the single oncall-tools replica (strategy Recreate).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: oncall-tools-data
+  namespace: oncall-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 256Mi

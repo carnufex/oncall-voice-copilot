@@ -74,8 +74,10 @@ The interesting question for an agent that can change production is not "can it 
    two minutes. `execute_action` needs that id, unexpired, unused, plus `confirmation: "confirmed"`.
    The prompt says "ask for a yes"; the backend makes it impossible to skip. Every commit is
    authored `oncall-copilot` so the audit trail shows it was the agent.
-7. **Auth on every inbound path.** Tools: shared secret header (constant-time compare). Slack:
-   signature v0 with a 5 min window. ElevenLabs webhook: HMAC with a 30 min window.
+7. **Auth on every inbound path.** Browser surface (call page, `/api`): Authentik SSO through
+   oauth2-proxy (OIDC client defined as an Authentik blueprint, 12 h cookie). Tools: shared secret
+   header (constant-time compare). Slack: signature v0 with a 5 min window. ElevenLabs webhook:
+   HMAC with a 30 min window. Machine paths bypass the SSO session check and rely on those.
 
 RBAC boundary as measured on the cluster (`kubectl auth can-i --as system:serviceaccount:oncall-demo:oncall-tools`):
 
@@ -181,8 +183,9 @@ From conversation `conv_4201m20w1mj1feyvgcgn4vr60n8t` (101 s, drill → logs →
 
 - Incident state is in memory (single replica). A restart loses open incidents; the detector
   reopens one if the pod is still crashing.
-- The call page is reachable by anyone with the unguessable incident URL; sessions are minted
-  server-side with the workspace key. Production would put it behind SSO.
+- Incident pages and the incident API require an Authentik login; the machine endpoints rely on
+  their own secrets. There is no per-user authorisation beyond "is an Authentik user" (a group
+  binding is one blueprint line away).
 - Only one action type (`rollback`) and one allow-listed service. Adding a service is one env var
   plus the RBAC label selector.
 - GitHub Actions is disabled on this account; images are built and pushed locally.

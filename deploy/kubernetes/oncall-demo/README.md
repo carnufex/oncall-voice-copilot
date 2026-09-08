@@ -11,6 +11,7 @@ operation; it can be deleted by removing this folder.
 | `oncall-tools` ServiceAccount + Role | Read-only on pods, pods/log, events, deployments, replicasets in this namespace. No secrets/configmaps/exec. |
 | `oncall-demo-refresh` Role (in `argocd`, see `infrastructure/controllers/argocd/oncall-demo-refresh-rbac.yaml`) | `get`/`patch` on the single Application `oncall-demo` so the backend can set the `argocd.argoproj.io/refresh` annotation after a commit instead of waiting for the 3 min poll. |
 | `oncall-tools-secrets` ExternalSecret | Bitwarden keys `ONCALL_*`. Placeholder value `unset` disables that integration. |
+| `oncall-tools-oauth2-proxy` Deployment | Authentik SSO (OIDC client `oncall-tools`, blueprint in `authentik-runtime`) in front of the call page and `/api`. `/tools`, `/slack`, `/webhooks`, `/healthz` bypass the session check; they authenticate with their own token/signatures. |
 
 Blast radius: the copilot's identity cannot read any other namespace, cannot
 read Secrets or ConfigMaps even here, and its only write paths are (1) a commit
