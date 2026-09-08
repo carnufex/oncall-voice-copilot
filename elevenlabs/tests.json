@@ -24,6 +24,11 @@
             "name": "E2E simulation: diagnose and propose rollback against live tools",
             "config": "test_configs/e2e-simulation-live-tools.json",
             "id": "test_7901m20kd591e0v9tntf8f2mtfng"
+        },
+        {
+            "name": "Transfers password requests to the access specialist",
+            "config": "test_configs/transfers-password-request.json",
+            "id": "test_4201m20wfah6ekstbnh3w1vn1tpa"
         }
     ]
 }

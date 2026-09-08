@@ -8,6 +8,7 @@ Built as the ElevenLabs FDE take-home. Everything runs against a real cluster (a
 homelab) in an isolated sandbox namespace, with real commits and real rollouts.
 
 - **Agent:** `On-call Voice Copilot` in the ElevenLabs workspace (`agent_1501m20j4f41fv1td9c3mvmkhek8`)
+- **Specialist:** `Access Support Specialist` (`agent_4801m20wd546enxb46bnfyvw8dmk`), reached only by transfer
 - **Call page:** `https://oncall.rosenvall.se/call/<incident_id>`
 - **Demo script:** [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md) · **Spec:** [docs/SPEC.md](docs/SPEC.md)
 
@@ -26,7 +27,8 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
                         "Roll it back."          → propose_action    │  plan + action_id (2 min TTL)
                         "Yes, go ahead."         → execute_action    │  Git commit → ArgoCD refresh
                                                  → verify_health     │  waits for the rollout
-                        "Thanks, that's all."    → resolve_incident, end_call
+                        "I also need a password reset" → transfer_to_agent ──► Access Support Specialist → create_ticket
+                        "That's all, thanks."    → end_call
           │
           ▼
    Post-call webhook (HMAC) ──► summary, root cause, action, "confirmation obtained", evals ──► Slack thread
@@ -42,6 +44,7 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
 | Data collection (`root_cause`, `action_taken`, `confirmation_obtained`) and 5 evaluation criteria | agent config, `platform_settings` |
 | Guardrails (focus, prompt injection) and a prompt with explicit confirmation rules | agent config |
 | Agent tests: 3 unit tests on the confirmation rules, 1 on scope refusal, 1 end-to-end simulation against the live tools | `elevenlabs/test_configs/` |
+| Agent-to-agent transfer: password/access requests hand over to the **Access Support Specialist** (own voice, prompt, KB, `create_ticket` tool, own evaluation criteria) on the same call | agent config `built_in_tools.transfer_to_agent`, `elevenlabs/agent_configs/` |
 | Post-call webhook, HMAC-verified, closing the loop in Slack | `services/oncall-tools/src/routes/webhooks.ts` |
 | React SDK (`@elevenlabs/react`, WebRTC) with a conversation token minted server-side | `services/oncall-tools/web/` |
 | Agents-as-code: agent, tools and tests pulled/pushed with the ElevenLabs CLI | `elevenlabs/` |
@@ -172,7 +175,7 @@ explanation, because the tool runtime hides non-2xx bodies from the model.
 ## What I would do next
 
 - Transfer to a human (Twilio/SIP) for the "escalate to secondary" path; the tool and prompt hooks exist.
-- Multi-agent: a triage agent on a cheap model handing over to the SRE agent with the write tools.
+- Multi-agent the other way round: a cheap triage agent in front, the SRE agent with the write tools behind it.
 - Alertmanager as the real alert source (the detector is a stand-in for it).
 - Persist incidents (SQLite) and stream tool events to the page over SSE instead of polling.
 

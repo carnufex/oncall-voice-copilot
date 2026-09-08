@@ -52,10 +52,17 @@ Say, in this order (short, natural):
 4. **"Yes, go ahead."**
    Expect: `execute_action` → commit link on the timeline, then `verify_health` while the agent
    says it is waiting for the rollout. Then: healthy, 1 of 1 on 1.0.0.
-5. **"Thanks, that's all."**
-   Expect: `resolve_incident`, goodbye, `end_call`.
+5. **"One more thing, I also need help changing my password."**
+   Expect: the agent says it will hand you over, then the **Access Support Specialist** (a
+   different voice) takes the same call: she explains the self-service reset path and creates a
+   ticket (`create_ticket` card on the timeline, ticket posted in the Slack thread).
+   > "Agent-to-agent transfer: the on-call agent has no business touching passwords, so it hands
+   > over to a specialist with its own prompt, knowledge base, tools and evaluation criteria.
+   > Same call, same context, different guardrails."
+6. **"No, that's all, thanks."**
+   Expect: goodbye, `end_call`.
 
-## 2:50 – Close the loop (40 s)
+## 3:10 – Close the loop (40 s)
 
 Back in Slack: the thread now has the resolution note and, a few seconds later, the post-call
 webhook summary: transcript summary, root cause, action, "confirmation obtained: true", and the
@@ -64,7 +71,7 @@ evaluation criteria results.
 > "That summary comes from ElevenLabs' post-call webhook: data collection and evaluation
 > criteria configured on the agent, delivered HMAC-signed to my backend, posted to the thread."
 
-## 3:30 – What's under the hood (30–60 s, only if time)
+## 3:50 – What's under the hood (30–45 s, only if time)
 
 Show the agent page briefly: tools, knowledge base (runbook, service catalog, change policy),
 data collection, evaluation criteria, tests. Then the repo README.
