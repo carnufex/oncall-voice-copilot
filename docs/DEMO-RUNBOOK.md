@@ -45,11 +45,11 @@ SSO cookie lasts 12 h), otherwise the Join button detours through the login page
 | 2:00 | Call page | "Yes, go ahead." → commit link, then verify_health | Optional: glance at the terminal `kubectl -w` while it waits |
 | 2:30 | Call page | Agent: healthy on 1.0.0, resolved, "anything else?" | |
 | 2:35 | Call page | "One more thing, I also need help changing my password." → handover, new voice | To camera: "Agent-to-agent transfer: same call, different guardrails, own knowledge base and tools." |
-| 3:05 | Call page | Specialist explains self-service, creates a ticket | Optional Swedish line here if time |
+| 3:05 | Call page | "It's my cluster single sign-on." → specialist sends a reset link (masked email, reference), offers a ticket only if needed | Optional Swedish line here if time |
 | 3:25 | Call page | "No, that's all, thanks." → goodbye, call ends | |
 | 3:30 | Slack thread | Show: notes, ticket, post-call summary with evaluation results, postmortem link | "That summary is ElevenLabs' post-call webhook: data collection and evaluation criteria, HMAC-signed to my backend." |
 | 3:50 | Click the postmortem issue | Scroll once through facts, changes, timeline | "Every call ends in a postmortem the copilot wrote." |
-| 4:05 | ElevenLabs agent tab | Tools, knowledge base, criteria, tests (7 passing) | "Everything is code, pulled and pushed with the ElevenLabs CLI." |
+| 4:05 | ElevenLabs agent tab | Tools, knowledge base, criteria, tests (8 across both agents, all passing) | "Everything is code, pulled and pushed with the ElevenLabs CLI." |
 | 4:25 | README tab | Architecture diagram, security table | "Happy to walk through any layer. Thanks." |
 | 4:35 | Stop | | |
 

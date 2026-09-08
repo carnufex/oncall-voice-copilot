@@ -1,32 +1,43 @@
 /* ==========================================================================
-   Design tokens — "incident console": dark, calm, premium (Linear/Vercel/
-   Raycast register). Inter for UI text, JetBrains Mono for ids/technical
-   values. Blue = default/speaking, teal = listening, amber = tool-running /
-   pending action, red = open/alert, green = resolved/executed.
+   Design tokens — "Auros": abyssal, bioluminescent, water-like. Deep teal
+   canvas with tinted surface stacks for depth (no drop shadows), a
+   cyan/teal bioluminescent primary accent and a lavender phosphor
+   secondary accent. Inter for UI text, JetBrains Mono for ids/technical
+   values. Cyan/teal = default/listening/speaking, lavender = tool-running,
+   red = open/alert, amber = pending action, green = resolved/executed.
    ========================================================================== */
 :root {
-  --bg: #07090d;
-  --bg-elevated: #0c0f15;
-  --panel: #10141b;
-  --panel-2: #151b24;
-  --panel-3: #1a212c;
-  --border: #212a37;
-  --border-soft: #171e28;
-  --text: #eef1f6;
-  --text-dim: #97a2b5;
-  --text-faint: #5c667a;
+  --bg: #012624;
+  --bg-elevated: #011f1d;
+  --panel: #011d1c;
+  --panel-2: #023331;
+  --panel-3: #003734;
+  --border: #0c4744;
+  --border-soft: #052e2b;
+  --text: #edfffe;
+  --text-dim: #bbc7c6;
+  --text-faint: #6f8886;
 
-  --blue: #4f9dff;
-  --blue-dim: #2a5fa8;
-  --blue-bg: rgba(79, 157, 255, 0.12);
-  --teal: #2dd4bf;
-  --teal-bg: rgba(45, 212, 191, 0.12);
-  --amber: #f0a942;
-  --amber-bg: rgba(240, 169, 66, 0.12);
-  --red: #f2555a;
-  --red-bg: rgba(242, 85, 90, 0.12);
-  --green: #34d399;
-  --green-bg: rgba(52, 211, 153, 0.12);
+  --blue: rgb(203, 255, 252);
+  --blue-dim: #0a5350;
+  --blue-bg: rgba(203, 255, 252, 0.1);
+  --teal: rgb(0, 130, 124);
+  --teal-bright: rgb(203, 255, 252);
+  --teal-bg: rgba(0, 130, 124, 0.22);
+  --lavender: #fde9ff;
+  --lavender-rgb: rgb(250, 209, 255);
+  --lavender-bg: rgba(253, 233, 255, 0.1);
+  --amber: #e8b969;
+  --amber-bg: rgba(232, 185, 105, 0.14);
+  --red: #ff8382;
+  --red-bg: rgba(255, 131, 130, 0.14);
+  --green: #6fe3b4;
+  --green-bg: rgba(111, 227, 180, 0.14);
+
+  --bioluminescent-gradient: linear-gradient(90deg, rgb(0, 130, 124) 0%, rgb(203, 255, 252) 100%);
+  --aurora-gradient: linear-gradient(90deg, rgb(203, 255, 252) 0%, rgb(237, 255, 254) 26%, rgb(255, 253, 250) 48%, rgb(250, 209, 255) 89%);
+  --mist: #edfffe;
+  --silver-mist: #bbc7c6;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -51,8 +62,8 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(1200px 600px at 15% -10%, rgba(79, 157, 255, 0.05), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(45, 212, 191, 0.035), transparent 55%),
+    radial-gradient(1200px 600px at 15% -10%, rgba(0, 130, 124, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(203, 255, 252, 0.045), transparent 55%),
     var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
@@ -100,8 +111,8 @@ code {
 }
 .banner-error {
   background: var(--red-bg);
-  border: 1px solid rgba(242, 85, 90, 0.35);
-  color: #ffb3b3;
+  border: 1px solid rgba(255, 131, 130, 0.35);
+  color: #ffc4c3;
 }
 
 /* ---------- Status pill ---------- */
@@ -130,26 +141,26 @@ code {
 .status-open {
   color: var(--red);
   background: var(--red-bg);
-  border-color: rgba(242, 85, 90, 0.32);
+  border-color: rgba(255, 131, 130, 0.32);
 }
 .status-open .status-pill-dot {
-  box-shadow: 0 0 0 3px rgba(242, 85, 90, 0.22);
+  box-shadow: 0 0 0 3px rgba(255, 131, 130, 0.22);
 }
 .status-mitigated {
   color: var(--amber);
   background: var(--amber-bg);
-  border-color: rgba(240, 169, 66, 0.32);
+  border-color: rgba(232, 185, 105, 0.32);
 }
 .status-mitigated .status-pill-dot {
-  box-shadow: 0 0 0 3px rgba(240, 169, 66, 0.22);
+  box-shadow: 0 0 0 3px rgba(232, 185, 105, 0.22);
 }
 .status-resolved {
   color: var(--green);
   background: var(--green-bg);
-  border-color: rgba(52, 211, 153, 0.32);
+  border-color: rgba(111, 227, 180, 0.32);
 }
 .status-resolved .status-pill-dot {
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22);
+  box-shadow: 0 0 0 3px rgba(111, 227, 180, 0.22);
 }
 
 /* ---------- Copy chip (incident id / conversation id) ---------- */
@@ -170,9 +181,9 @@ code {
   border-color: var(--border);
 }
 .copy-chip-accent {
-  border-color: rgba(79, 157, 255, 0.28);
+  border-color: rgba(203, 255, 252, 0.28);
   background: var(--blue-bg);
-  color: #cfe1ff;
+  color: #d8fffb;
 }
 .copy-chip-value {
   padding-right: 2px;
@@ -306,7 +317,7 @@ code {
   color: var(--text-dim);
   line-height: 1.45;
   background: var(--green-bg);
-  border: 1px solid rgba(52, 211, 153, 0.22);
+  border: 1px solid rgba(111, 227, 180, 0.22);
   border-radius: var(--radius-sm);
   padding: 7px 10px;
 }
@@ -499,21 +510,13 @@ code {
   padding: 8px 0 4px;
 }
 
+/* No drop-shadows — the sphere's own volumetric glow (drawn on the canvas) carries the depth,
+   consistent with the Auros surface-tint approach used across the rest of the page. */
 .voice-orb {
-  filter: drop-shadow(0 8px 30px rgba(79, 157, 255, 0.08));
-}
-.voice-orb-listening {
-  filter: drop-shadow(0 8px 30px rgba(45, 212, 191, 0.12));
-}
-.voice-orb-speaking {
-  filter: drop-shadow(0 8px 34px rgba(79, 157, 255, 0.2));
-}
-.voice-orb-tool {
-  filter: drop-shadow(0 8px 30px rgba(240, 169, 66, 0.14));
+  filter: none;
 }
 .voice-orb-ended {
-  filter: none;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .call-status-label {
@@ -524,7 +527,7 @@ code {
   transition: color 0.2s ease;
 }
 .call-status-label-listening {
-  color: var(--teal);
+  color: var(--teal-bright);
 }
 .call-status-label-speaking {
   color: var(--blue);
@@ -533,7 +536,7 @@ code {
   color: var(--blue);
 }
 .call-status-label-tool {
-  color: var(--amber);
+  color: var(--lavender);
 }
 .call-status-label-ended {
   color: var(--text-faint);
@@ -562,23 +565,24 @@ code {
   transform: scale(0.98);
 }
 .answer-button {
-  background: var(--blue);
-  color: #051221;
-  box-shadow: 0 4px 20px rgba(79, 157, 255, 0.22);
+  background: var(--bioluminescent-gradient);
+  color: #012624;
+  box-shadow: none;
 }
 .answer-button:hover:not(:disabled) {
-  background: #6badff;
+  filter: brightness(1.08);
 }
 .answer-button:disabled {
   background: var(--blue-dim);
-  color: #cfe1ff;
+  color: var(--text-dim);
   cursor: default;
   box-shadow: none;
+  filter: none;
 }
 .hangup-button {
   background: var(--panel-3);
   color: var(--red);
-  border: 1px solid rgba(242, 85, 90, 0.3);
+  border: 1px solid rgba(255, 131, 130, 0.3);
 }
 .hangup-button:hover {
   background: var(--red-bg);
@@ -660,7 +664,7 @@ code {
 }
 .transcript-user {
   background: var(--blue-bg);
-  border: 1px solid rgba(79, 157, 255, 0.2);
+  border: 1px solid rgba(203, 255, 252, 0.2);
   align-self: flex-end;
   text-align: right;
   border-bottom-right-radius: 3px;
@@ -731,7 +735,7 @@ code {
 }
 
 .pending-action-card {
-  border: 1px solid rgba(240, 169, 66, 0.35);
+  border: 1px solid rgba(232, 185, 105, 0.35);
   background: var(--amber-bg);
   border-radius: var(--radius-md);
   padding: 13px 15px;
@@ -851,12 +855,12 @@ code {
 
 .timeline-kind-alert .timeline-icon {
   color: var(--red);
-  border-color: rgba(242, 85, 90, 0.3);
+  border-color: rgba(255, 131, 130, 0.3);
   background: var(--red-bg);
 }
 .timeline-kind-tool .timeline-icon {
   color: var(--blue);
-  border-color: rgba(79, 157, 255, 0.28);
+  border-color: rgba(203, 255, 252, 0.28);
   background: var(--blue-bg);
 }
 .timeline-kind-action .timeline-icon {
@@ -864,7 +868,7 @@ code {
 }
 .timeline-kind-note .timeline-icon {
   color: var(--amber);
-  border-color: rgba(240, 169, 66, 0.28);
+  border-color: rgba(232, 185, 105, 0.28);
   background: var(--amber-bg);
 }
 .timeline-kind-call .timeline-icon {
@@ -873,12 +877,12 @@ code {
 
 .timeline-executed {
   background: var(--green-bg);
-  border-color: rgba(52, 211, 153, 0.3);
+  border-color: rgba(111, 227, 180, 0.3);
 }
 .timeline-executed .timeline-icon {
   color: var(--green);
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(111, 227, 180, 0.35);
+  background: rgba(111, 227, 180, 0.16);
 }
 .timeline-executed .timeline-title {
   color: var(--green);
@@ -927,8 +931,8 @@ code {
 .text-composer-send {
   border: none;
   border-radius: var(--radius-sm);
-  background: var(--blue);
-  color: #051221;
+  background: var(--bioluminescent-gradient);
+  color: #012624;
   font-weight: 650;
   font-size: 13px;
   padding: 0 16px;
@@ -936,7 +940,7 @@ code {
 }
 .text-composer-send:disabled {
   background: var(--blue-dim);
-  color: #cfe1ff;
+  color: var(--text-dim);
   cursor: default;
 }
 
