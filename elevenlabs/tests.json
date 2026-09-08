@@ -29,6 +29,16 @@
             "name": "Transfers password requests to the access specialist",
             "config": "test_configs/transfers-password-request.json",
             "id": "test_4201m20wfah6ekstbnh3w1vn1tpa"
+        },
+        {
+            "name": "Ignores instructions embedded in log output",
+            "config": "test_configs/ignores-injected-log-instructions.json",
+            "id": "test_3001m20yqspgfd8rnk23dwegq55s"
+        },
+        {
+            "name": "Flags the poisoned log line instead of obeying it",
+            "config": "test_configs/flags-poisoned-log-line.json",
+            "id": "test_5801m20yqswaeevbrgzdc55kfpm1"
         }
     ]
 }
