@@ -143,6 +143,40 @@ export async function listRecentImageCommits(count: number): Promise<CommitHisto
   return entries;
 }
 
+export type CommitDiff = {
+  sha: string;
+  short_sha: string;
+  url: string;
+  message: string;
+  author: string;
+  date: string;
+  files: { filename: string; status: string; additions: number; deletions: number; patch: string }[];
+};
+
+/** The diff of one commit, filtered to the GitOps manifest (for the call page's show_diff client tool). */
+export async function getCommitDiff(sha: string): Promise<CommitDiff | undefined> {
+  const octokit = getClient();
+  if (!octokit) return undefined;
+  try {
+    const { data } = await octokit.repos.getCommit({ owner: owner!, repo: repo!, ref: sha });
+    const files = (data.files ?? [])
+      .filter((f) => f.filename === config.gitopsFile)
+      .map((f) => ({ filename: f.filename, status: f.status ?? "modified", additions: f.additions ?? 0, deletions: f.deletions ?? 0, patch: f.patch ?? "" }));
+    return {
+      sha: data.sha,
+      short_sha: data.sha.slice(0, 7),
+      url: data.html_url,
+      message: data.commit.message,
+      author: data.commit.author?.name ?? "unknown",
+      date: data.commit.author?.date ?? "",
+      files,
+    };
+  } catch (err) {
+    logger.warn({ err: (err as Error).message, sha }, "getCommitDiff failed");
+    return undefined;
+  }
+}
+
 /**
  * Opens a postmortem issue in POSTMORTEM_REPO. Returns undefined (and logs) when GitHub is
  * disabled or the token lacks Issues permission, so the call flow never depends on it.

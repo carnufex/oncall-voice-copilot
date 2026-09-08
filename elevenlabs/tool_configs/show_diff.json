@@ -1,0 +1,41 @@
+{
+    "assignments": [],
+    "description": "Show the Git diff of a deployment commit on the engineer's call page while you talk. Call it right after get_recent_changes with the sha of the deploy that caused the incident (and again with the rollback commit sha after execute_action). Does not block; nothing to wait for.",
+    "disable_interruptions": false,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "expects_response": false,
+    "force_pre_tool_speech": false,
+    "interruption_mode": "allow",
+    "name": "show_diff",
+    "parameters": {
+        "description": "",
+        "dynamic_variable": "",
+        "is_omitted": false,
+        "properties": {
+            "commit_sha": {
+                "allowed_values": null,
+                "allowed_values_dynamic_variable": "",
+                "constant_value": "",
+                "description": "The commit sha (short or full) from get_recent_changes or execute_action.",
+                "dynamic_variable": "",
+                "enum": null,
+                "is_omitted": false,
+                "is_system_provided": false,
+                "type": "string"
+            }
+        },
+        "required": [
+            "commit_sha"
+        ],
+        "type": "object"
+    },
+    "pre_tool_speech": "auto",
+    "response_timeout_secs": 20,
+    "tool_call_sound": null,
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "type": "client"
+}

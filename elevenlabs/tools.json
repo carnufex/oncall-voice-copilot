@@ -59,6 +59,16 @@
             "type": "webhook",
             "config": "tool_configs\\send_reset_link.json",
             "id": "tool_6301m2120g4zejwt6nncmfq2r7w2"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs\\clear_screen.json",
+            "id": "tool_0601m217hp9geskt8zexmy1sc1se"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs\\show_diff.json",
+            "id": "tool_3701m217hp3kf0a9ew2cej2n3gym"
         }
     ]
 }

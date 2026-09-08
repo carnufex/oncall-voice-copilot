@@ -44,6 +44,11 @@
             "name": "Specialist sends a reset link and never asks for the password",
             "config": "test_configs/specialist-sends-reset-link.json",
             "id": "test_2801m2122wd4efcsjzr492e05rz6"
+        },
+        {
+            "name": "Shows the deploy diff on screen after get_recent_changes",
+            "config": "test_configs/shows-diff-after-changes.json",
+            "id": "test_4701m217jryrewd93hqbcr9ekt2x"
         }
     ]
 }

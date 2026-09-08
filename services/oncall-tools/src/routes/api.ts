@@ -4,6 +4,7 @@ import { config } from "../config.js";
 import { logger } from "../log.js";
 import { addTimelineEntry, createIncident, getIncident, listIncidents, putIncident } from "../store.js";
 import { mintConversationToken, mintSignedUrl } from "../elevenlabs.js";
+import { getCommitDiff } from "../github.js";
 import { minutesAgo } from "../spoken.js";
 import type { Incident } from "../types.js";
 
@@ -56,11 +57,29 @@ apiRoute.post("/incidents/:id/session", async (c) => {
     alert_age: describeAge(minutesAgo(incident.opened_at)),
     engineer_name: config.oncallEngineerName,
     opened_at_local: openedLocal,
+    history_hint: describeHistory(incident),
   };
 
   addTimelineEntry(incident, "call", mode === "text" ? "Text session requested" : "Voice call requested");
   return c.json({ mode, conversation_token: token?.conversation_token, signed_url: signedUrl, dynamic_variables });
 });
+
+/**
+ * One spoken sentence about earlier incidents for the same service (or an empty string), so the
+ * agent can open with "this is the second time today; last time a rollback fixed it".
+ */
+function describeHistory(current: Incident): string {
+  const earlier = listIncidents().filter(
+    (i) => i.id !== current.id && i.service === current.service && i.status === "resolved" && i.opened_at < current.opened_at,
+  );
+  if (earlier.length === 0) return "";
+  const last = earlier[0]!;
+  const ago = minutesAgo(last.opened_at);
+  const when = ago < 60 ? `${ago} minutes ago` : ago < 60 * 36 ? `${Math.round(ago / 60)} hours ago` : `${Math.round(ago / 1440)} days ago`;
+  const action = last.action_taken ? ` and was fixed by: ${last.action_taken.replace(/\.$/, "")}` : "";
+  const count = earlier.length === 1 ? "This is the second incident for this service" : `This is incident number ${earlier.length + 1} for this service`;
+  return `${count}. The previous one, ${when}, had the same alert${action}.`;
+}
 
 /** "just now" / "about a minute ago" / "about 7 minutes ago" for the agent's opening line. */
 function describeAge(minutes: number): string {
@@ -68,6 +87,19 @@ function describeAge(minutes: number): string {
   if (minutes === 1) return "about a minute ago";
   return `about ${minutes} minutes ago`;
 }
+
+// Diff of one commit to the deployment manifest, rendered by the call page when the agent calls
+// the show_diff client tool. Behind SSO like the rest of /api.
+apiRoute.get("/incidents/:id/commits/:sha/diff", async (c) => {
+  const incident = getIncident(c.req.param("id"));
+  if (!incident) return c.json({ error: "incident_not_found" }, 404);
+  const sha = c.req.param("sha");
+  if (!/^[0-9a-f]{7,40}$/i.test(sha)) return c.json({ error: "commit_not_found" }, 404);
+  const diff = await getCommitDiff(sha);
+  if (!diff) return c.json({ error: "commit_not_found" }, 404);
+  addTimelineEntry(incident, "note", "show_diff", `Showed commit ${diff.short_sha} on the call page`);
+  return c.json(diff);
+});
 
 const conversationSchema = z.object({ conversation_id: z.string() });
 

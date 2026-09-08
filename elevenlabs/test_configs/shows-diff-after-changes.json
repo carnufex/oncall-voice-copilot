@@ -1,0 +1,64 @@
+{
+  "name": "Shows the deploy diff on screen after get_recent_changes",
+  "type": "tool",
+  "chat_history": [
+    {
+      "role": "agent",
+      "time_in_call_secs": 0,
+      "message": "Hi Christopher, this is the on-call copilot. demo-api in oncall-demo went into CrashLoopBackOff about 3 minutes ago. Want me to start with what changed, or with the logs?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 5,
+      "message": "What changed?"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 7,
+      "tool_calls": [
+        {
+          "request_id": "c1",
+          "tool_name": "get_recent_changes",
+          "params_as_json": "{\"incident_id\":\"inc_test000008\"}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 9,
+      "tool_results": [
+        {
+          "request_id": "c1",
+          "tool_name": "get_recent_changes",
+          "result_value": "{\"file\":\"kubernetes/applications/oncall-demo/demo-api-deployment.yaml\",\"commits\":[{\"sha\":\"8d9c14c0a1b2c3d4e5f60718293a4b5c6d7e8f90\",\"short_sha\":\"8d9c14c\",\"author\":\"Release Bot\",\"date\":\"2026-09-08T16:00:27Z\",\"minutes_ago\":4,\"message\":\"feat(oncall-demo): deploy demo-api 1.1.0\",\"image_before\":\"registry.rosenvall.se/carnufex/oncall-demo-api:1.0.0\",\"image_after\":\"registry.rosenvall.se/carnufex/oncall-demo-api:1.1.0\",\"url\":\"https://github.com/carnufex/Rosenvalls-Homelab/commit/8d9c14c0a1b2c3d4e5f60718293a4b5c6d7e8f90\"}],\"replicasets\":[],\"spoken_summary\":\"The most recent change was four minutes ago by Release Bot: feat(oncall-demo): deploy demo-api 1.1.0. It changed the image from version 1.0.0 to 1.1.0.\"}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ]
+    }
+  ],
+  "dynamic_variables": {
+    "incident_id": "inc_test000008",
+    "service": "demo-api",
+    "namespace": "oncall-demo",
+    "environment": "homelab sandbox cluster",
+    "alert_reason": "CrashLoopBackOff",
+    "alert_message": "back-off 40s restarting failed container",
+    "alert_minutes_ago": "3",
+    "alert_age": "about 3 minutes ago",
+    "engineer_name": "Christopher",
+    "opened_at_local": "14:32",
+    "history_hint": ""
+  },
+  "check_any_tool_matches": true,
+  "tool_call_parameters": {
+    "referenced_tool": {
+      "id": "tool_3701m217hp3kf0a9ew2cej2n3gym",
+      "type": "client"
+    },
+    "parameters": []
+  }
+}

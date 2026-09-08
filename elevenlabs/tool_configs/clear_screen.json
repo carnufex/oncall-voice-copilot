@@ -1,0 +1,27 @@
+{
+    "assignments": [],
+    "description": "Remove the diff card from the engineer's call page. Only when the engineer explicitly asks to clear or hide it. Never call it as part of a handover or before another tool.",
+    "disable_interruptions": false,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "expects_response": false,
+    "force_pre_tool_speech": false,
+    "interruption_mode": "allow",
+    "name": "clear_screen",
+    "parameters": {
+        "description": "",
+        "dynamic_variable": "",
+        "is_omitted": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+    },
+    "pre_tool_speech": "auto",
+    "response_timeout_secs": 20,
+    "tool_call_sound": null,
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "type": "client"
+}
