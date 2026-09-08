@@ -57,3 +57,21 @@ export type SessionResponse = {
   signed_url?: string;
   dynamic_variables: Record<string, string>;
 };
+
+export type CommitDiffFile = {
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  patch: string;
+};
+
+export type CommitDiff = {
+  sha: string;
+  short_sha: string;
+  url: string;
+  message: string;
+  author: string;
+  date: string;
+  files: CommitDiffFile[];
+};

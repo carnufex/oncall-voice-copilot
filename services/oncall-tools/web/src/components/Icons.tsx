@@ -84,6 +84,10 @@ export function ChevronLeftIcon({ className }: IconProps) {
   return base(<path d="M10 3 5 8l5 5" />, className);
 }
 
+export function CloseIcon({ className }: IconProps) {
+  return base(<path d="M4 4 12 12M12 4 4 12" />, className);
+}
+
 export const KIND_ICON: Record<"alert" | "tool" | "action" | "note" | "call", (props: IconProps) => JSX.Element> = {
   alert: AlertIcon,
   tool: ToolIcon,

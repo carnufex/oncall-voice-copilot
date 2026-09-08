@@ -1,6 +1,7 @@
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { startSessionForIncident, reportConversationId } from "../api.js";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { startSessionForIncident, reportConversationId, fetchCommitDiff } from "../api.js";
+import type { CommitDiff } from "../types.js";
 import { VoiceOrb, type OrbState } from "./VoiceOrb.js";
 
 type TranscriptTurn = { id: number; source: "ai" | "user"; message: string };
@@ -14,7 +15,13 @@ const TOOL_SILENCE_MS = 800;
 const AUDIO_ACTIVE_THRESHOLD = 0.02;
 const DERIVE_INTERVAL_MS = 150;
 
-function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; onConversationId: (id: string) => void }) {
+type CallPanelProps = {
+  incidentId: string;
+  onConversationId: (id: string) => void;
+  onShowDiff: (diff: CommitDiff | undefined) => void;
+};
+
+function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelProps) {
   const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
   const [errorText, setErrorText] = useState<string | undefined>(undefined);
   const [starting, setStarting] = useState(false);
@@ -30,6 +37,28 @@ function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; 
   const lastAudioRef = useRef(0);
   const prevSdkModeRef = useRef<string | undefined>(undefined);
 
+  // Client tools the agent can invoke mid-call to drive the page. Returns must be
+  // string | number | void (the SDK's ClientToolsConfig contract) — plain spoken-style
+  // confirmations, since the actual payload goes to the UI via onShowDiff, not the return value.
+  const clientTools = useMemo(
+    () => ({
+      show_diff: async ({ commit_sha }: { commit_sha: string }) => {
+        try {
+          const diff = await fetchCommitDiff(incidentId, commit_sha);
+          onShowDiff(diff);
+          return "diff shown";
+        } catch (err) {
+          return err instanceof Error ? `could not load diff: ${err.message}` : "could not load diff";
+        }
+      },
+      clear_screen: async () => {
+        onShowDiff(undefined);
+        return "cleared";
+      },
+    }),
+    [incidentId, onShowDiff],
+  );
+
   const conversation = useConversation({
     onConnect: ({ conversationId }) => {
       hasConnectedRef.current = true;
@@ -40,6 +69,7 @@ function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; 
       setTranscript((t) => [...t, { id: nextId.current++, source, message }]);
     },
     onError: (message) => setErrorText(message),
+    clientTools,
   });
 
   useEffect(() => {
@@ -224,7 +254,7 @@ function CallPanelInner({ incidentId, onConversationId }: { incidentId: string; 
   );
 }
 
-export function CallPanel(props: { incidentId: string; onConversationId: (id: string) => void }) {
+export function CallPanel(props: CallPanelProps) {
   return (
     <ConversationProvider>
       <CallPanelInner {...props} />

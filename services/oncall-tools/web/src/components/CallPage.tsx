@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchIncident } from "../api.js";
-import type { Incident } from "../types.js";
+import type { CommitDiff, Incident } from "../types.js";
 import { StatusPill } from "./StatusPill.js";
 import { CallPanel } from "./CallPanel.js";
 import { Timeline } from "./Timeline.js";
+import { DiffCard } from "./DiffCard.js";
 import { CopyChip } from "./CopyChip.js";
 import { ChevronLeftIcon } from "./Icons.js";
 import { minutesAgo, formatClock } from "../utils.js";
@@ -14,7 +15,20 @@ export function CallPage({ incidentId }: { incidentId: string }) {
   const [incident, setIncident] = useState<Incident | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  const [diff, setDiff] = useState<CommitDiff | undefined>(undefined);
   const pollRef = useRef<number | undefined>(undefined);
+
+  // Dev-only escape hatch so the diff card can be exercised visually without a live agent
+  // call — `import.meta.env.DEV` is statically false in production builds, so Vite dead-code
+  // eliminates this whole effect (and the window hook) from the shipped bundle.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const w = window as unknown as { __showDiff?: (d: CommitDiff | undefined) => void };
+    w.__showDiff = setDiff;
+    return () => {
+      delete w.__showDiff;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,9 +99,10 @@ export function CallPage({ incidentId }: { incidentId: string }) {
 
       <main className="call-body">
         <section className="call-column call-column-left">
-          <CallPanel incidentId={incident.id} onConversationId={setConversationId} />
+          <CallPanel incidentId={incident.id} onConversationId={setConversationId} onShowDiff={setDiff} />
         </section>
         <section className="call-column call-column-right">
+          {diff && <DiffCard diff={diff} onDismiss={() => setDiff(undefined)} />}
           <Timeline incident={incident} />
         </section>
       </main>

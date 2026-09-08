@@ -1,4 +1,4 @@
-import type { Incident, IncidentListEntry, SessionResponse } from "./types.js";
+import type { CommitDiff, Incident, IncidentListEntry, SessionResponse } from "./types.js";
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -34,4 +34,10 @@ export async function reportConversationId(id: string, conversationId: string): 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ conversation_id: conversationId }),
   });
+}
+
+/** Diff of one commit to the deployment manifest, for the call page's show_diff client tool. */
+export async function fetchCommitDiff(incidentId: string, sha: string): Promise<CommitDiff> {
+  const res = await fetch(`/api/incidents/${incidentId}/commits/${encodeURIComponent(sha)}/diff`);
+  return json<CommitDiff>(res);
 }
