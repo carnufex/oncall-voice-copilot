@@ -4,7 +4,7 @@
             "config": "agent_configs\\On-call-Voice-Copilot.json",
             "id": "agent_1501m20j4f41fv1td9c3mvmkhek8",
             "branch_id": "agtbrch_3001m20j4gjter3ahrn3spdcm4ww",
-            "version_id": "agtvrsn_8101m217jwsbfhwrhbndy2gfskxd"
+            "version_id": "agtvrsn_1401m217pdfeex9s2f50mvcnyae0"
         },
         {
             "config": "agent_configs\\Access-Support-Specialist.json",
