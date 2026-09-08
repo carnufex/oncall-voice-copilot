@@ -50,6 +50,7 @@ apiRoute.post("/incidents/:id/session", async (c) => {
     alert_reason: incident.alert.reason,
     alert_message: incident.alert.message,
     alert_minutes_ago: String(minutesAgo(incident.opened_at)),
+    alert_age: describeAge(minutesAgo(incident.opened_at)),
     engineer_name: config.oncallEngineerName,
     opened_at_local: openedLocal,
   };
@@ -57,6 +58,13 @@ apiRoute.post("/incidents/:id/session", async (c) => {
   addTimelineEntry(incident, "call", mode === "text" ? "Text session requested" : "Voice call requested");
   return c.json({ mode, conversation_token: token?.conversation_token, signed_url: signedUrl, dynamic_variables });
 });
+
+/** "just now" / "about a minute ago" / "about 7 minutes ago" for the agent's opening line. */
+function describeAge(minutes: number): string {
+  if (minutes < 1) return "just now";
+  if (minutes === 1) return "about a minute ago";
+  return `about ${minutes} minutes ago`;
+}
 
 const conversationSchema = z.object({ conversation_id: z.string() });
 
@@ -67,7 +75,7 @@ apiRoute.post("/incidents/:id/conversation", async (c) => {
   if (!body.success) return c.json({ error: "bad_request" }, 400);
 
   incident.conversation_id = body.data.conversation_id;
-  addTimelineEntry(incident, "call", "Voice call started");
+  addTimelineEntry(incident, "call", "Session connected");
   return c.json({ ok: true });
 });
 
