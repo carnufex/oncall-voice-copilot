@@ -82,7 +82,7 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
     onIncomingEvent: (event) => {
       if (event.type !== "guardrail_triggered") return;
       const name = (event as { guardrail_triggered_event?: { guardrail_name?: string } }).guardrail_triggered_event?.guardrail_name;
-      setEndedByGuardrail(name ? name.replace(/_/g, " ").replace(/\w/g, (c) => c.toUpperCase()) : "platform guardrail");
+      setEndedByGuardrail(name ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "platform guardrail");
     },
     onDisconnect: (details) => {
       if (details.reason !== "error") return;
