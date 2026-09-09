@@ -1061,7 +1061,8 @@
                 "interruption",
                 "agent_response",
                 "user_transcript",
-                "agent_tool_response"
+                "agent_tool_response",
+                "guardrail_triggered"
             ],
             "compaction": {
                 "enabled": null,

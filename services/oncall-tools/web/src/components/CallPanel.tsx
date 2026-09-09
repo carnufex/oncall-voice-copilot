@@ -77,11 +77,18 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
     onMessage: ({ message, source }) => {
       setTranscript((t) => [...t, { id: nextId.current++, source, message }]);
     },
+    // The platform sends guardrail_triggered before it acts (agent config: client_events). Over
+    // WebRTC the disconnect that follows carries no reason text, so the name is taken from the event.
+    onIncomingEvent: (event) => {
+      if (event.type !== "guardrail_triggered") return;
+      const name = (event as { guardrail_triggered_event?: { guardrail_name?: string } }).guardrail_triggered_event?.guardrail_name;
+      setEndedByGuardrail(name ? name.replace(/_/g, " ").replace(/\w/g, (c) => c.toUpperCase()) : "platform guardrail");
+    },
     onDisconnect: (details) => {
       if (details.reason !== "error") return;
       const guardrail = guardrailFromReason(`${details.message} ${details.closeReason ?? ""}`);
       if (guardrail) setEndedByGuardrail(guardrail);
-      else setErrorText(details.message);
+      else if (!/LiveKit connection state/.test(details.message)) setErrorText(details.message);
     },
     onError: (message) => {
       // The guardrail close also surfaces as an error; keep it out of the error banner.
@@ -233,9 +240,14 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
           )}
         </div>
 
-        {endedByGuardrail && (
+        {endedByGuardrail && !connected && (
           <div className="banner banner-guardrail">
             Call ended by the platform guardrail: <strong>{endedByGuardrail}</strong>. Nothing was executed; the incident is still open. Answer again to continue.
+          </div>
+        )}
+        {endedByGuardrail && connected && (
+          <div className="banner banner-guardrail">
+            Guardrail <strong>{endedByGuardrail}</strong> intervened: the reply was regenerated.
           </div>
         )}
         {errorText && <div className="banner banner-error">{errorText}</div>}
