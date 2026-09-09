@@ -100,6 +100,30 @@ throwaway agent, so keep it until after the recording). Then the repo README.
 
 End recording.
 
+## Capability cue sheet
+
+What to point at, when, and the one sentence that names the ElevenLabs feature. "Visible" means
+the viewer sees it happen; "config" means you show it on the agent page at the end.
+
+| Time | You say / do | ElevenLabs feature in play | Visible? | Cue (one sentence) |
+|---|---|---|---|---|
+| 0:50 | Answer call | React SDK over WebRTC, conversation token minted server-side; **dynamic variables** (engineer, service, alert, incident history) rendered into the **first message** | visible: the briefing | "That briefing is the first message rendered from dynamic variables my backend sent at session start." |
+| 0:55 | "What do the logs say?" | **Webhook tool** `get_pod_logs` (workspace-secret header, `spoken_summary`), backend redaction; poisoned line handled by the prompt rule + **prompt-injection guardrail** + an **evaluation criterion** | visible: tool card, the flagged line | "Webhook tool against my cluster; the poisoned log line is data, not an instruction." |
+| 1:20 | "What changed?" | Webhook tool `get_recent_changes` + **client tool** `show_diff` | visible: diff card | "That card is a client tool: the agent drives the page while it talks." |
+| 1:30 (optional) | "What does the runbook say, and what does the change policy require?" | **Knowledge base with RAG** (runbook, service catalog, policy, crawled and auto-synced K8s/Argo docs), **source attribution** | visible: the answer cites the runbook | "Knowledge base with RAG; the external docs are auto-synced weekly." |
+| 1:40 | "Roll it back." | **Procedure** "Rollback procedure" (evidence, then plan, then yes, then execute, then verify) + webhook tool `propose_action`; the two-step action id lives in the backend | visible: plan read aloud, amber card | "The rollback flow is a published procedure; the plan id and the two-minute expiry are enforced in my backend." |
+| 2:00 | "Yes, go ahead." | Webhook tools `execute_action`, `show_diff`, `verify_health`; the **custom guardrail** judges every reply against the tool results in blocking mode | visible: commit link, health result | "Every sentence here passed a custom guardrail that blocks claims no tool result confirms." |
+| 2:35 | "I also need help changing my password." | **Agent-to-agent transfer** (system tool `transfer_to_agent`) to the Access Support Specialist: own voice, prompt, knowledge base, tools, evaluation criteria, same custom guardrail | visible: new voice, `send_reset_link` card | "Same call, different agent, different guardrails." |
+| optional | "Kan du sammanfatta läget på svenska?" | **Language detection** system tool + **language preset** `sv` (multilingual TTS only for Swedish) | visible: Swedish | "Language preset: Swedish switches the TTS model, English stays on flash for latency." |
+| 3:25 | "No, that's all, thanks." | System tool `end_call` | visible | (none needed) |
+| 3:30 | Slack thread | **Post-call webhook** (HMAC), **data collection** (root cause, action, confirmation obtained), six **evaluation criteria**, transcript summary; postmortem issue | visible | "Post-call webhook: data collection and evaluation criteria, delivered signed to my backend." |
+| 4:05 | Agent page | Tools, knowledge base, **procedures**, **tests** (nine unit tests plus an end-to-end simulation), **guardrails** (custom), agents-as-code via the CLI | config | "Everything is code, pulled and pushed with the CLI; the tests gate the push." |
+
+Two honest limits. The procedure is published, but ElevenLabs shows no "procedure started" marker
+in the transcript, so say "the flow is a published procedure" and show it on the Procedures
+tab rather than claiming to watch it fire. The custom guardrail is silent when the agent behaves,
+so its proof is the drill (`npm run drill:guardrail`), not the golden path.
+
 ## If something goes wrong
 
 | Symptom | Do |
