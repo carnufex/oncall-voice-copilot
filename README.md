@@ -31,7 +31,7 @@ homelab) in an isolated sandbox namespace, with real commits and real rollouts.
                         "That's all, thanks."    → end_call
           │
           ▼
-   Post-call webhook (HMAC) ──► summary, root cause, action, "confirmation obtained", evals ──► Slack thread
+   Post-call webhook (HMAC) ──► postmortem issue (summary, root cause, evals, timeline) + one-line verdict ──► Slack thread
 ```
 
 ## What the demo shows on the ElevenLabs side

@@ -134,7 +134,8 @@ export async function postThreadMessage(incident: Incident, text: string): Promi
   const c = getClient();
   if (!c || !incident.slack) return;
   try {
-    await c.chat.postMessage({ channel: incident.slack.channel, thread_ts: incident.slack.thread_ts, text });
+    // No link previews in the thread: the postmortem link should be one line, not a card.
+    await c.chat.postMessage({ channel: incident.slack.channel, thread_ts: incident.slack.thread_ts, text, unfurl_links: false, unfurl_media: false });
   } catch (err) {
     logger.warn({ err }, "Failed to post Slack thread message");
   }

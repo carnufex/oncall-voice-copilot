@@ -99,6 +99,26 @@ function extractField(value: unknown): string {
   return String(value);
 }
 
+/** "6/6 passed", or "5/6 passed (no_secret_leakage: failure)"; the per-criterion list lives in the postmortem. */
+function summarizeEvaluation(results: Record<string, { result?: string } | unknown> | undefined): string {
+  if (!results) return "not run";
+  const entries = Object.entries(results).map(([id, r]) => {
+    const result = typeof r === "object" && r !== null && "result" in r ? String((r as { result?: string }).result ?? "unknown") : "unknown";
+    return [id, result] as const;
+  });
+  if (!entries.length) return "not run";
+  const passed = entries.filter(([, r]) => r === "success").length;
+  const rest = entries.filter(([, r]) => r !== "success").map(([id, r]) => `${id}: ${r}`);
+  return `${passed}/${entries.length} passed${rest.length ? ` (${rest.join(", ")})` : ""}`;
+}
+
+function formatDuration(secs: number | undefined): string | undefined {
+  if (secs == null || !Number.isFinite(secs)) return undefined;
+  const m = Math.floor(secs / 60);
+  const s = Math.round(secs % 60);
+  return m ? `${m} min ${s} s` : `${s} s`;
+}
+
 function formatEvaluation(results: Record<string, { result?: string } | unknown> | undefined): string {
   if (!results) return "none";
   const parts = Object.entries(results).map(([criterion, r]) => {
@@ -136,23 +156,15 @@ async function handlePostCallTranscription(payload: PostCallTranscriptionPayload
   const actionTaken = extractField(dcr["action_taken"]);
   const confirmationObtained = extractField(dcr["confirmation_obtained"]);
   const evaluation = formatEvaluation(analysis?.evaluation_criteria_results);
+  const conversationId = payload.data?.conversation_id ?? "unknown";
 
-  const text = [
-    `:white_check_mark: Call ended — conversation \`${payload.data?.conversation_id ?? "unknown"}\``,
-    `*Summary:* ${summary}`,
-    `*Root cause:* ${rootCause} | *Action:* ${actionTaken} | *Confirmation obtained:* ${confirmationObtained}`,
-    `*Evaluation:* ${evaluation}`,
-    `*Call successful:* ${callSuccessful}`,
-  ].join("\n");
-
-  await postThreadMessage(incident, text);
   await endCall(incident);
   addTimelineEntry(incident, "call", "Voice call ended", summary);
 
   const issue = await createPostmortemIssue({
     title: `Postmortem: ${incident.service} ${incident.alert.reason} (${incident.id})`,
     body: buildPostmortem(incident, {
-      conversationId: payload.data?.conversation_id ?? "unknown",
+      conversationId,
       summary,
       rootCause,
       actionTaken,
@@ -161,10 +173,19 @@ async function handlePostCallTranscription(payload: PostCallTranscriptionPayload
       callSuccessful,
     }),
   });
-  if (issue) {
-    await postThreadMessage(incident, `:page_facing_up: Postmortem issue #${issue.number}: ${issue.url}`);
-    addTimelineEntry(incident, "note", "postmortem", `Issue #${issue.number}: ${issue.url}`);
-  }
+  if (issue) addTimelineEntry(incident, "note", "postmortem", `Issue #${issue.number}: ${issue.url}`);
+
+  // One short thread message. The transcript summary, the per-criterion results and the timeline
+  // live in the postmortem issue (and on the call page); the thread only needs the verdict and a link.
+  const duration = formatDuration(payload.data?.metadata?.call_duration_secs);
+  const lines = [
+    `:white_check_mark: Call ended · \`${conversationId}\`${duration ? ` · ${duration}` : ""} · confirmation obtained: ${confirmationObtained}`,
+  ];
+  if (incident.status !== "resolved") lines.push(`*Root cause:* ${rootCause} · *Action:* ${actionTaken}`);
+  lines.push(
+    `Evaluation ${summarizeEvaluation(analysis?.evaluation_criteria_results)} · ${issue ? `<${issue.url}|Postmortem #${issue.number}>` : "postmortem not created (GitHub integration disabled)"}`,
+  );
+  await postThreadMessage(incident, lines.join("\n"));
 }
 
 webhooksRoute.post("/elevenlabs/post-call", async (c) => {

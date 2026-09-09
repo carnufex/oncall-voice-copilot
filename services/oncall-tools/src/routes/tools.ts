@@ -438,7 +438,7 @@ toolsRoute.post(
     incident.status = "resolved";
     incident.resolved_at = new Date().toISOString();
 
-    await postThreadMessage(incident, `:white_check_mark: Incident resolved.\n*Root cause:* ${redact(body.root_cause)}\n*Action taken:* ${redact(body.action_taken)}`);
+    await postThreadMessage(incident, `:white_check_mark: Resolved · *Root cause:* ${redact(body.root_cause)} · *Action:* ${redact(body.action_taken)}`);
     await endCall(incident);
 
     return { json: { status: "resolved", spoken_summary: `Marked resolved. Root cause: ${redact(body.root_cause)}.` } };

@@ -74,10 +74,11 @@ Say, in this order (short, natural):
 
 ## 3:10 – Close the loop (40 s)
 
-Back in Slack: the thread now has the resolution note, the ticket, and, a few seconds later,
-the post-call webhook summary (transcript summary, root cause, action, "confirmation obtained:
-true", evaluation results) plus a link to the **postmortem issue** the copilot opened in the
-GitOps repo. Open it: facts table, changes made, full timeline, follow-ups.
+Back in Slack: the thread now has the resolution note, the reset-link note, and, a few seconds
+later, one short post-call line: conversation id, duration, "confirmation obtained: true",
+"Evaluation 6/6 passed" and a link to the **postmortem issue** the copilot opened in the GitOps
+repo. Open it: summary, facts table with data collection and every evaluation criterion, changes
+made, full timeline, follow-ups.
 
 > "That summary comes from ElevenLabs' post-call webhook: data collection and evaluation
 > criteria configured on the agent, delivered HMAC-signed to my backend, posted to the thread."
@@ -116,7 +117,7 @@ the viewer sees it happen; "config" means you show it on the agent page at the e
 | 2:35 | "I also need help changing my password." | **Agent-to-agent transfer** (system tool `transfer_to_agent`) to the Access Support Specialist: own voice, prompt, knowledge base, tools, evaluation criteria, same custom guardrail | visible: new voice, `send_reset_link` card | "Same call, different agent, different guardrails." |
 | optional | "Kan du sammanfatta läget på svenska?" | **Language detection** system tool + **language preset** `sv` (multilingual TTS only for Swedish) | visible: Swedish | "Language preset: Swedish switches the TTS model, English stays on flash for latency." |
 | 3:25 | "No, that's all, thanks." | System tool `end_call` | visible | (none needed) |
-| 3:30 | Slack thread | **Post-call webhook** (HMAC), **data collection** (root cause, action, confirmation obtained), six **evaluation criteria**, transcript summary; postmortem issue | visible | "Post-call webhook: data collection and evaluation criteria, delivered signed to my backend." |
+| 3:30 | Slack thread + postmortem issue | **Post-call webhook** (HMAC), **data collection** (root cause, action, confirmation obtained), six **evaluation criteria**, transcript summary; the thread gets one line, the issue gets everything | visible | "Post-call webhook: data collection and evaluation criteria, delivered signed to my backend, written up as a postmortem." |
 | 4:05 | Agent page | Tools, knowledge base, **procedures**, **tests** (nine unit tests plus an end-to-end simulation), **guardrails** (custom), agents-as-code via the CLI | config | "Everything is code, pulled and pushed with the CLI; the tests gate the push." |
 
 Two honest limits. The procedure is published, but ElevenLabs shows no "procedure started" marker

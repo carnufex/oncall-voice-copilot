@@ -33,7 +33,7 @@ Golden path:
 3. The call page starts an ElevenLabs conversation (WebRTC) with the incident as dynamic variables. The agent briefs the engineer.
 4. Engineer asks what is wrong / what changed. Agent uses `get_pod_status`, `get_pod_logs`, `get_recent_changes`.
 5. Engineer says "roll it back". Agent calls `propose_action`, reads the plan aloud, waits for an explicit yes, then `execute_action`, then `verify_health`.
-6. Agent calls `resolve_incident`. Post-call webhook posts summary + conversation id into the Slack thread and ends the call card.
+6. Agent calls `resolve_incident`. Post-call webhook opens the postmortem issue, posts a one-line verdict (conversation id, duration, confirmation obtained, evaluation score, issue link) into the Slack thread and ends the call card.
 
 ## 2. Backend service: `services/oncall-tools`
 

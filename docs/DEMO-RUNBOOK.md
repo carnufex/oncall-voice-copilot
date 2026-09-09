@@ -47,7 +47,7 @@ SSO cookie lasts 12 h), otherwise the Join button detours through the login page
 | 2:35 | Call page | "One more thing, I also need help changing my password." → handover, new voice | To camera: "Agent-to-agent transfer: same call, different guardrails, own knowledge base and tools." |
 | 3:05 | Call page | "It's my cluster single sign-on." → specialist sends a reset link (masked email, reference), offers a ticket only if needed | Optional Swedish line here if time |
 | 3:25 | Call page | "No, that's all, thanks." → goodbye, call ends | |
-| 3:30 | Slack thread | Show: notes, ticket, post-call summary with evaluation results, postmortem link | "That summary is ElevenLabs' post-call webhook: data collection and evaluation criteria, HMAC-signed to my backend." |
+| 3:30 | Slack thread | Show: resolution note, reset-link note, the one-line post-call verdict (6/6, confirmation obtained) with the postmortem link | "That line is ElevenLabs' post-call webhook: data collection and evaluation criteria, HMAC-signed to my backend. The details are in the postmortem." |
 | 3:50 | Click the postmortem issue | Scroll once through facts, changes, timeline | "Every call ends in a postmortem the copilot wrote." |
 | 4:05 | ElevenLabs agent tab | Tools, knowledge base, criteria, tests (9 across both agents, all passing), Guardrails tab with the custom claim check | "Everything is code, pulled and pushed with the ElevenLabs CLI. The custom guardrail blocks any claim of a change the tools didn't confirm; I drilled it with a sabotaged copy of the agent." |
 | 4:25 | README tab | Architecture diagram, security table | "Happy to walk through any layer. Thanks." |
@@ -58,7 +58,7 @@ SSO cookie lasts 12 h), otherwise the Join button detours through the login page
 You need it for the submission and reviewers may want to open it.
 
 - On the call page header and footer (monospace chip with copy), as soon as the call connects.
-- In the Slack thread: the post-call message starts with `Call ended — conversation conv_…`.
+- In the Slack thread: the post-call line starts with `Call ended · conv_…`.
 - In the postmortem issue facts table.
 - In ElevenLabs: Agents → On-call Voice Copilot → History (link: `https://elevenlabs.io/app/agents/history/<conversation_id>`).
 - In the backend: `https://oncall.rosenvall.se/` lists incidents with their conversation ids.
