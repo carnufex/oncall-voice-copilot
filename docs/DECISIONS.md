@@ -118,3 +118,38 @@ updates go through `PATCH /v1/convai/agents/{id}` with the changed fields, then 
 tools; real voice calls only for rehearsal and the recording; text mode for everything else.
 **Why.** A 100 s voice call costs ~1,400 credits; simulations and unit tests cost far less and
 catch regressions in the confirmation, transfer and injection rules.
+
+## 15. A custom guardrail that checks claims against tool results
+
+**Decision.** One custom platform guardrail on both agents, "No execution claims without a tool
+result": block a reply that asserts a rollback, commit, reset, ticket or recovery happened in this
+call unless a tool result in the history confirms it (`execute_action` executed, `verify_health`
+healthy, `send_reset_link` sent, `create_ticket` with an id). Blocking mode, six user messages of
+history, **tool calls and results included in what the evaluator sees**, `gemini-3.1-flash-lite`,
+retry with feedback. `elevenlabs/scripts/guardrail-drill.mjs` (`npm run drill:guardrail`) proves
+it against a throwaway copy of the agent whose prompt is sabotaged to claim the rollback is done:
+the guardrail blocked three attempts and ended the call; with `--without-guardrail` the same lie
+goes straight through. The throwaway agent is deleted afterwards and its conversation history
+goes with it, so `--keep` exists for when the conversation should stay visible.
+
+**Why.** The backend already makes it impossible to *execute* without a plan and a yes. What it
+cannot prevent is the model *saying* "done, healthy again" without having called anything. That
+is the failure mode an on-call engineer would actually be hurt by, and it is exactly what an
+output guardrail with tool-call visibility can catch. It also gives the demo a platform-level
+safety feature that leaves evidence: the transcript records every blocked attempt and the
+termination reason names the guardrail.
+
+**What went wrong first.** The first version (`history_include_tool_calls: false`, no
+exclusions) fired on the *opening line*: the incident-history hint says "the previous incident
+was fixed by: rolled back demo-api ...", the evaluator could not see any tool results, and a
+first message cannot be retried, so the platform ended the call after three attempts
+(`conv_1301m21ahrhteze8pmfsy4269za3`). Two fixes: the evaluator now sees tool calls and results,
+and the prompt lists what must not be blocked (the briefing, history references, plans and
+proposals, yes/no questions, tool errors). `evaluate_full_response_only` is not available for
+voice agents (audio streams as it is generated), so the guardrail judges cumulative partials in
+blocking mode; the exclusions are written with that in mind. Cost: roughly a second of extra
+latency on the opening line and a little on each turn.
+
+**Rejected.** Putting the rule only in the prompt (already there; unverifiable), a
+content-category guardrail (wrong tool), a secret-leak guardrail (the backend redacts before the
+model ever sees the data, so it would never fire).

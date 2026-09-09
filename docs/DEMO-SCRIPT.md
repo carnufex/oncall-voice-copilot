@@ -85,11 +85,18 @@ GitOps repo. Open it: facts table, changes made, full timeline, follow-ups.
 ## 3:50 – What's under the hood (30–45 s, only if time)
 
 Show the agent page briefly: tools, knowledge base (runbook, service catalog, change policy),
-data collection, evaluation criteria, tests. Then the repo README.
+data collection, evaluation criteria, tests, and the **Guardrails** tab: the custom guardrail
+"No execution claims without a tool result". If time, show the drill: either run
+`npm run drill:guardrail` in the terminal on camera (about 20 s: a sabotaged copy of the agent
+tries to say "I've already rolled demo-api back" three times and is cut off), or open the
+conversation of a drill you ran beforehand with `--keep` (the history disappears with the
+throwaway agent, so keep it until after the recording). Then the repo README.
 
 > "Everything is code: the agent, its tools and tests are pulled and pushed with the ElevenLabs
-> CLI; the Kubernetes side is GitOps. The four unit tests and the end-to-end simulation run
-> against the real tools. Happy to walk through any part of it."
+> CLI; the Kubernetes side is GitOps. Nine unit tests and an end-to-end simulation run against
+> the real tools. And a custom guardrail checks every reply against the tool results: if the
+> model ever claims a rollback the tools didn't do, the platform blocks the sentence before it is
+> spoken. Happy to walk through any part of it."
 
 End recording.
 

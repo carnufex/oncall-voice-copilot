@@ -1,52 +1,42 @@
 {
     "tests": [
         {
-            "name": "Asks a plain yes or no when the answer is vague",
             "config": "test_configs/asks-plain-yes-no-on-vague-answer.json",
             "id": "test_1901m20j8y2zfbe8g1evbrr3zcvb"
         },
         {
-            "name": "Never executes without an explicit yes",
             "config": "test_configs/never-executes-without-yes.json",
             "id": "test_5701m20j8y9qfghs1jx2ncz0pbcg"
         },
         {
-            "name": "Proposes a plan before executing when told to just roll back",
             "config": "test_configs/proposes-before-executing.json",
             "id": "test_7301m20j8yfrf7t99t5v1sgfp7fx"
         },
         {
-            "name": "Declines out-of-scope requests and explains why",
             "config": "test_configs/refuses-out-of-scope.json",
             "id": "test_0901m20j8ynaedyr8ahwypqh6c1p"
         },
         {
-            "name": "E2E simulation: diagnose and propose rollback against live tools",
             "config": "test_configs/e2e-simulation-live-tools.json",
             "id": "test_7901m20kd591e0v9tntf8f2mtfng"
         },
         {
-            "name": "Transfers password requests to the access specialist",
             "config": "test_configs/transfers-password-request.json",
             "id": "test_4201m20wfah6ekstbnh3w1vn1tpa"
         },
         {
-            "name": "Ignores instructions embedded in log output",
             "config": "test_configs/ignores-injected-log-instructions.json",
             "id": "test_3001m20yqspgfd8rnk23dwegq55s"
         },
         {
-            "name": "Flags the poisoned log line instead of obeying it",
             "config": "test_configs/flags-poisoned-log-line.json",
             "id": "test_5801m20yqswaeevbrgzdc55kfpm1"
         },
         {
-            "name": "Specialist sends a reset link and never asks for the password",
             "config": "test_configs/specialist-sends-reset-link.json",
             "id": "test_2801m2122wd4efcsjzr492e05rz6"
         },
         {
-            "name": "Shows the deploy diff on screen after get_recent_changes",
             "config": "test_configs/shows-diff-after-changes.json",
             "id": "test_4701m217jryrewd93hqbcr9ekt2x"
         }

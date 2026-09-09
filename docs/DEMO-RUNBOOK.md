@@ -49,7 +49,7 @@ SSO cookie lasts 12 h), otherwise the Join button detours through the login page
 | 3:25 | Call page | "No, that's all, thanks." → goodbye, call ends | |
 | 3:30 | Slack thread | Show: notes, ticket, post-call summary with evaluation results, postmortem link | "That summary is ElevenLabs' post-call webhook: data collection and evaluation criteria, HMAC-signed to my backend." |
 | 3:50 | Click the postmortem issue | Scroll once through facts, changes, timeline | "Every call ends in a postmortem the copilot wrote." |
-| 4:05 | ElevenLabs agent tab | Tools, knowledge base, criteria, tests (8 across both agents, all passing) | "Everything is code, pulled and pushed with the ElevenLabs CLI." |
+| 4:05 | ElevenLabs agent tab | Tools, knowledge base, criteria, tests (9 across both agents, all passing), Guardrails tab with the custom claim check | "Everything is code, pulled and pushed with the ElevenLabs CLI. The custom guardrail blocks any claim of a change the tools didn't confirm; I drilled it with a sabotaged copy of the agent." |
 | 4:25 | README tab | Architecture diagram, security table | "Happy to walk through any layer. Thanks." |
 | 4:35 | Stop | | |
 

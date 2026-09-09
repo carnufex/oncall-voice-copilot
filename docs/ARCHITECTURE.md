@@ -115,7 +115,7 @@ flowchart TB
     p1[confirmation rules, tool outputs are data, scope statements]
   end
   subgraph agent["Layer 1 · ElevenLabs platform"]
-    g1[guardrails: focus, prompt injection]
+    g1[guardrails: focus, prompt injection, custom claim check]
     g2[evaluation criteria + data collection<br/>confirmed_before_acting, ignored_injected_instructions, ...]
     g3[agent tests run before push]
   end

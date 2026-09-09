@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test:agents": "node scripts/run-agent-tests.mjs",
+    "drill:guardrail": "node scripts/guardrail-drill.mjs",
     "pull": "elevenlabs agents pull --all --update --yes && elevenlabs tools pull --yes",
     "push:dry": "elevenlabs agents push --dry-run"
   }

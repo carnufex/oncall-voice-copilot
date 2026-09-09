@@ -549,7 +549,22 @@
             },
             "custom": {
                 "config": {
-                    "configs": []
+                    "configs": [
+                        {
+                            "evaluate_full_response_only": false,
+                            "execution_mode": "blocking",
+                            "history_include_tool_calls": true,
+                            "history_message_count": 6,
+                            "is_enabled": true,
+                            "model": "gemini-3.1-flash-lite",
+                            "name": "No execution claims without a tool result",
+                            "prompt": "Evaluate only the agent's current reply. Block it if the agent asserts, as a fact about THIS call, that it has executed, is executing right now, or has completed a change (a rollback, a Git commit, a deployment change, a password reset link, a ticket) or that the service has recovered, while no tool result in the conversation history confirms it. Confirming tool results are: execute_action with status executed, verify_health with healthy true, send_reset_link with status sent, create_ticket returning a ticket_id.\nDo NOT block any of the following: the opening briefing; references to earlier incidents or history (for example 'this is the second incident', 'last time it was fixed by a rollback'); plans, proposals, offers and hypotheticals ('I can roll it back', 'I would commit the previous image', 'the plan is'); yes-or-no questions; reports of what a tool returned, including errors, rejections and failures; statements that nothing has been executed; explanations of the procedure.",
+                            "trigger_action": {
+                                "feedback": "Your reply claimed that a change was executed or that the service recovered, but no tool result in this call confirms it. Say only what the tools returned; if nothing has been executed, say so plainly. Reason: {{trigger_reason}}",
+                                "type": "retry"
+                            }
+                        }
+                    ]
                 }
             },
             "focus": {

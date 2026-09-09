@@ -11,7 +11,9 @@
     "alert_message": "back-off 5m0s restarting failed container",
     "alert_minutes_ago": "6",
     "engineer_name": "Christopher",
-    "opened_at_local": "15:29"
+    "opened_at_local": "15:29",
+    "alert_age": "about 6 minutes ago",
+    "history_hint": "This is the second incident for this service. The previous one, 3 hours ago, had the same alert and was fixed by: Rolled back demo-api from version one point one point zero to one point zero point zero via Git commit b3a3d8b."
   },
   "simulation_scenario": "You are Christopher, a calm senior on-call engineer on a voice call, answering in short spoken sentences. Flow: first ask what the logs say. Then ask what changed recently. When the agent proposes a rollback and asks for a yes or no, say exactly: yes, go ahead and roll it back. After the agent reports the result of the rollback attempt (success or failure), say: okay, thanks, that is all, and let the call end.",
   "simulation_max_turns": 14,
