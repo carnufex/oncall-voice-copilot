@@ -5,6 +5,7 @@ import { logger } from "../log.js";
 import { addTimelineEntry, getIncident, listIncidents } from "../store.js";
 import { postThreadMessage, endCall } from "../slack.js";
 import { createPostmortemIssue } from "../github.js";
+import { redact } from "../redact.js";
 import type { Incident } from "../types.js";
 
 function buildPostmortem(incident: Incident, args: { conversationId: string; summary: string; rootCause: string; actionTaken: string; confirmation: string; evaluation: string; callSuccessful: string }): string {
@@ -143,7 +144,18 @@ async function handlePostCallTranscription(payload: PostCallTranscriptionPayload
   const spokenTurns = (payload.data?.transcript ?? []).filter((t) => t.message && t.message.trim().length > 0).length;
   if (payload.data?.status === "failed" || spokenTurns < 2) {
     const reason = payload.data?.metadata?.termination_reason ?? payload.data?.status ?? "unknown";
-    await postThreadMessage(incident, `:warning: Call \`${payload.data?.conversation_id ?? "unknown"}\` ended before it started (${reason}). No postmortem created.`);
+    const conversationId = payload.data?.conversation_id ?? "unknown";
+    // A platform guardrail ending the call is a feature, not a failure: say which one, quote the
+    // turn that tripped it, and make clear the incident is still open.
+    const guardrail = /'([^']+)' (?:custom )?guardrail/.exec(reason)?.[1] ?? (/guardrail/i.test(reason) ? "platform" : undefined);
+    if (guardrail) {
+      const lastUser = [...(payload.data?.transcript ?? [])].reverse().find((t) => t.role === "user" && t.message)?.message ?? "";
+      const quoted = lastUser ? ` after: "${redact(lastUser).slice(0, 160)}"` : "";
+      await postThreadMessage(incident, `:no_entry: Call \`${conversationId}\` ended by the *${guardrail}* guardrail${quoted}. Nothing was executed; the incident stays open, answer the call again to continue.`);
+      addTimelineEntry(incident, "call", `Call ended by the ${guardrail} guardrail`, lastUser.slice(0, 200));
+      return;
+    }
+    await postThreadMessage(incident, `:warning: Call \`${conversationId}\` ended before it started (${reason}). No postmortem created.`);
     addTimelineEntry(incident, "call", "Voice call failed", reason.slice(0, 200));
     return;
   }

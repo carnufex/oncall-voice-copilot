@@ -15,6 +15,12 @@ const TOOL_SILENCE_MS = 800;
 const AUDIO_ACTIVE_THRESHOLD = 0.02;
 const DERIVE_INTERVAL_MS = 150;
 
+/** "Conversation was stopped because the 'Prompt Injection' guardrail was triggered" -> "Prompt Injection". */
+function guardrailFromReason(text: string | undefined): string | undefined {
+  if (!text) return undefined;
+  return /'([^']+)' (?:custom )?guardrail/.exec(text)?.[1] ?? (/guardrail/i.test(text) ? "platform guardrail" : undefined);
+}
+
 type CallPanelProps = {
   incidentId: string;
   onConversationId: (id: string) => void;
@@ -24,6 +30,8 @@ type CallPanelProps = {
 function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelProps) {
   const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
   const [errorText, setErrorText] = useState<string | undefined>(undefined);
+  // Set when the platform ended the call itself (a guardrail): shown as a verdict, not an error.
+  const [endedByGuardrail, setEndedByGuardrail] = useState<string | undefined>(undefined);
   const [starting, setStarting] = useState(false);
   const [mode, setMode] = useState<SessionMode>("voice");
   const [draft, setDraft] = useState("");
@@ -62,13 +70,23 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
   const conversation = useConversation({
     onConnect: ({ conversationId }) => {
       hasConnectedRef.current = true;
+      setEndedByGuardrail(undefined);
       void reportConversationId(incidentId, conversationId);
       onConversationId(conversationId);
     },
     onMessage: ({ message, source }) => {
       setTranscript((t) => [...t, { id: nextId.current++, source, message }]);
     },
-    onError: (message) => setErrorText(message),
+    onDisconnect: (details) => {
+      if (details.reason !== "error") return;
+      const guardrail = guardrailFromReason(`${details.message} ${details.closeReason ?? ""}`);
+      if (guardrail) setEndedByGuardrail(guardrail);
+      else setErrorText(details.message);
+    },
+    onError: (message) => {
+      // The guardrail close also surfaces as an error; keep it out of the error banner.
+      if (!guardrailFromReason(message)) setErrorText(message);
+    },
     clientTools,
   });
 
@@ -94,7 +112,7 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
     if (!connected) {
       if (hasConnectedRef.current) {
         setOrbState("ended");
-        setStatusLabel("Call ended");
+        setStatusLabel(endedByGuardrail ? "Ended by guardrail" : "Call ended");
       } else {
         setOrbState("idle");
         setStatusLabel("Ready");
@@ -140,7 +158,7 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
     return () => window.clearInterval(id);
     // conversation is a stable-ish object from the SDK; status/mode drive re-derivation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, conversation.status, mode, conversation.mode]);
+  }, [connected, conversation.status, mode, conversation.mode, endedByGuardrail]);
 
   async function handleAnswer() {
     setErrorText(undefined);
@@ -215,6 +233,11 @@ function CallPanelInner({ incidentId, onConversationId, onShowDiff }: CallPanelP
           )}
         </div>
 
+        {endedByGuardrail && (
+          <div className="banner banner-guardrail">
+            Call ended by the platform guardrail: <strong>{endedByGuardrail}</strong>. Nothing was executed; the incident is still open. Answer again to continue.
+          </div>
+        )}
         {errorText && <div className="banner banner-error">{errorText}</div>}
       </div>
 
