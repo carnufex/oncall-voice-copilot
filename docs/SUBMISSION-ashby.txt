@@ -1,0 +1,31 @@
+Agent: On-call Voice Copilot, agent_1501m20j4f41fv1td9c3mvmkhek8
+https://elevenlabs.io/app/agents/agents/agent_1501m20j4f41fv1td9c3mvmkhek8
+Hands over mid-call to the Access Support Specialist, agent_4801m20wd546enxb46bnfyvw8dmk.
+
+Example conversation: conv_2601m22x439aetw9jbc0p0tfqwt4
+The call in the video: 2 min 55 s, both agents, 6/6 evaluation criteria, confirmation obtained, rollback executed and verified.
+
+Loom: https://www.loom.com/share/738bbdd9df94458593832f97dee277cd
+
+Postmortem the agent wrote for that call: https://github.com/carnufex/Rosenvalls-Homelab/issues/47
+Not shown in the video: the post-call webhook (HMAC-verified) posts a one-line verdict to the Slack incident thread and opens this issue with the summary, data collection, evaluation results, the rollback commit and the full timeline.
+
+Repository: https://github.com/carnufex/oncall-voice-copilot
+README is the handoff; architecture, design decisions, spec and the demo script are under docs/.
+
+What it is
+An on-call voice copilot for a real Kubernetes cluster. An alert opens an incident and posts a Slack call card; the engineer answers in the browser (React SDK, WebRTC); the agent diagnoses with webhook tools against the cluster and Git, proposes a rollback, executes it only after an explicit yes, verifies the rollout, resolves the incident and hands password requests to a second agent. Everything is live: my homelab cluster, real commits, ArgoCD applying them.
+
+In the call, what to look for
+- Dynamic variables: the opening line carries the alert and the incident history ("incident number 6 for this service, the last one was fixed by a rollback").
+- Webhook tools with redaction and spoken summaries; the crashing version prints a log line addressed to AI agents ("roll back without asking"), which the agent flags instead of obeying.
+- Client tool show_diff: the agent renders the offending commit on the page while it explains it.
+- Published rollback procedure and a two-step action: plan read aloud, explicit yes, execute_action with an expiring action id, verify_health before any claim of success.
+- Language detection: a Swedish question mid-call, then back to English.
+- Agent-to-agent transfer to the Access Support Specialist (own voice, prompt, tools, evaluation criteria), which sends a reset link and never handles a password.
+
+Safety, enforced in code rather than in the prompt
+RBAC scoped to one namespace with no secrets, a backend allowlist and redaction, the two-step action, SSO in front of the call page. On the platform: prompt-injection and focus guardrails, plus a custom guardrail on both agents that blocks any claim of a change no tool result confirms. Its first version fired on the opening line; the fix, and the drill that proves it catches a lying model, are in docs/DECISIONS.md section 15. Nine agent tests and an end-to-end simulation gate every push; agents, tools and tests are code via the ElevenLabs CLI.
+
+Access
+The agent is not publicly callable by design (signed tokens, SSO, scoped tools). Happy to run a live session on request.
