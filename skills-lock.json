@@ -5,7 +5,7 @@
       "source": "elevenlabs/skills",
       "sourceType": "github",
       "skillPath": "agents/SKILL.md",
-      "computedHash": "0c1d787cd10104fca2f68df9759dba8e9aac6bae5eecc6486f792fe73c434c31"
+      "computedHash": "202a142fed6f025f6be5762b49adcc3f1f3b7c98b85867627f9f39cda2351938"
     },
     "dubbing": {
       "source": "elevenlabs/skills",
@@ -47,7 +47,7 @@
       "source": "elevenlabs/skills",
       "sourceType": "github",
       "skillPath": "text-to-speech/SKILL.md",
-      "computedHash": "f406b87e79b95070cc495006adea4c0a7147ffc492aa92ec9c7b71eaa9392c1c"
+      "computedHash": "e6107324e231080566051ae6ca0a7a69c68ffaceff297e96d28d42d754e65b6b"
     },
     "update-skills-from-changelog": {
       "source": "elevenlabs/skills",
