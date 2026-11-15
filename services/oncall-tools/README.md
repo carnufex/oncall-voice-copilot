@@ -35,6 +35,7 @@ K8S_NAMESPACE=oncall-demo
 | `GET /healthz` | none | liveness, `{ ok: true }` |
 | `POST /tools/*` | `X-Oncall-Token` | agent tool endpoints (get_incident, get_pod_status, get_pod_logs, get_recent_events, get_recent_changes, propose_action, execute_action, verify_health, resolve_incident, add_note) |
 | `POST /slack/commands` | Slack signature | `/oncall drill\|reset\|status` |
+| `POST /drill/break`, `POST /drill/reset` | `Authorization: Bearer <DRILL_API_TOKEN>` | what `/oncall drill` / `/oncall reset` do, for a Lots drill button (below); 404 when `DRILL_API_TOKEN` is unset |
 | `POST /webhooks/elevenlabs/post-call` | `ElevenLabs-Signature` HMAC | post-call summary -> Slack thread |
 | `GET /api/incidents` | public (unguessable ids) | list, newest first |
 | `GET /api/incidents/:id` | public | incident + timeline, polled by the call page every 2s |
@@ -42,6 +43,24 @@ K8S_NAMESPACE=oncall-demo
 | `POST /api/incidents/:id/conversation` | public | records the conversation id once connected |
 | `POST /api/dev/incidents` | public, `DEV_FIXTURES=1` only | creates a fake incident for local testing |
 | `GET /`, `GET /call/:id` | public | the call page (React SPA) |
+
+## Drill endpoints for Lots
+
+`POST /drill/break` and `POST /drill/reset` exist for a Lots alert source's **drill** button (Lots'
+`docs/incidents.md`, "Drills"): an admin presses it, Lots calls `/drill/break` in the cluster
+(`http://oncall-tools.oncall-demo.svc.cluster.local:8080`), and the crash that follows reaches Lots through
+Alertmanager like any other alert. They call the same code as `/oncall drill` and `/oncall reset`
+(`src/drill.ts`): the same commit to `GITOPS_FILE` (its body says "Drill triggered from Lots." / "Reset
+triggered from Lots."), the same ArgoCD refresh, and a reset resolves open incidents as the Slack one does.
+
+- **Switch**: `DRILL_API_TOKEN`. Missing or `unset` = both routes answer 404.
+- **Auth**: `Authorization: Bearer <DRILL_API_TOKEN>`, compared in constant time; anything else is 401.
+  `/drill/` is not one of the public route's unauthenticated prefixes, so from outside the cluster it is
+  behind oauth2-proxy (SSO) too.
+- **Answer**: one line of plain text for the button's outcome, never a token or GitHub's response:
+  `200` `demo-api 1.1.0 is committed (abc1234); ArgoCD is rolling it out.`, `demo-api is already on 1.1.0.`,
+  `demo-api is back on 1.0.0 (def5678).`; `502` with the reason when nothing could be committed
+  (`file_drifted`, `commit_failed`, GitHub disabled).
 
 ## Security model summary
 

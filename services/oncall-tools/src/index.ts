@@ -10,6 +10,7 @@ import { toolsRoute } from "./routes/tools.js";
 import { slackRoute } from "./routes/slack.js";
 import { apiRoute } from "./routes/api.js";
 import { webhooksRoute } from "./routes/webhooks.js";
+import { drillRoute } from "./routes/drill.js";
 import { startDetector } from "./detector.js";
 import { initStore } from "./store.js";
 
@@ -27,6 +28,7 @@ app.route("/tools", toolsRoute);
 app.route("/slack", slackRoute);
 app.route("/api", apiRoute);
 app.route("/webhooks", webhooksRoute);
+app.route("/drill", drillRoute);
 
 app.use("/assets/*", serveStatic({ root: path.relative(process.cwd(), webDist) }));
 

@@ -36,6 +36,9 @@ export const config = {
   port: optionalNumber("PORT", 8080),
   publicBaseUrl: required("PUBLIC_BASE_URL"),
   toolApiToken: required("TOOL_API_TOKEN"),
+  // Bearer for POST /drill/break and /drill/reset (a Lots alert source's drill button). Missing or
+  // "unset" = the drill routes answer 404.
+  drillApiToken: raw("DRILL_API_TOKEN"),
 
   elevenlabsApiKey: raw("ELEVENLABS_API_KEY"),
   elevenlabsAgentId: raw("ELEVENLABS_AGENT_ID"),

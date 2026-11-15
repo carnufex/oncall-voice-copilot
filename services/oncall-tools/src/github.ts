@@ -46,8 +46,11 @@ export type CommitResult = {
 };
 
 export class FileDriftedError extends Error {
-  constructor() {
+  /** The image the file names instead (its first `image:` line), when there is one. */
+  readonly currentImage: string | undefined;
+  constructor(currentImage?: string) {
     super("file_drifted");
+    this.currentImage = currentImage;
   }
 }
 
@@ -75,7 +78,7 @@ export async function commitImageChange(params: {
   const currentYaml = Buffer.from(fileData.content, "base64").toString("utf8");
   const nextYaml = replaceImageLine(currentYaml, params.fromImage, params.toImage);
   if (nextYaml === undefined) {
-    throw new FileDriftedError();
+    throw new FileDriftedError(extractImageLine(currentYaml));
   }
 
   const { data: commitData } = await octokit.repos.createOrUpdateFileContents({
