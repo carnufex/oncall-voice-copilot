@@ -48,20 +48,31 @@ export type ResetResult = {
   resolved: string[];
 };
 
+export type RestoreResult = Omit<ResetResult, "resolved"> & {
+  /** Whether the ArgoCD refresh was accepted (false: the sync picks the commit up within three minutes). */
+  refreshed: boolean;
+};
+
+/** The tag of a demo-api image reference (`1.0.0`), or the whole reference when it is some other image. */
+export function tagOf(image: string | undefined): string {
+  if (!image) return "no image line";
+  return image.startsWith(`${config.demoImage}:`) ? image.slice(config.demoImage.length + 1) : image;
+}
+
 /**
- * Commits the good demo-api tag in place of the bad one (nothing when the file does not name the bad
- * one), asks ArgoCD to refresh, and resolves every open incident, saying so in its Slack thread and
- * ending its call. `source` names who asked, in the commit and in the thread. GitHub being disabled or
- * failing is thrown.
+ * The one rollback rule, shared by the reset (Slack and POST /drill/reset) and POST /ops/rollback (an agent in
+ * Lots, after a person approved it there): commits the good demo-api tag (DEMO_GOOD_TAG) in place of the bad one
+ * (DEMO_BAD_TAG), or nothing when the file does not name the bad one, and asks ArgoCD to refresh. The tags come
+ * from configuration, never from a caller. GitHub being disabled or failing is thrown.
  */
-export async function resetDemoApi(source: "Slack" | "Lots"): Promise<ResetResult> {
+export async function restoreGoodTag(message: string): Promise<RestoreResult> {
   let commit: CommitResult | undefined;
   let currentImage: string | undefined;
   try {
     commit = await commitImageChange({
       fromImage: badImage(),
       toImage: goodImage(),
-      message: `revert(oncall-demo): reset demo-api to ${config.demoGoodTag}\n\nReset triggered from ${source}.`,
+      message,
       authorName: "oncall-copilot",
       authorEmail: "oncall-copilot@rosenvall.se",
     });
@@ -74,18 +85,39 @@ export async function resetDemoApi(source: "Slack" | "Lots"): Promise<ResetResul
       throw err;
     }
   }
-  await requestArgoCdRefresh();
+  const refresh = await requestArgoCdRefresh();
+  return { commit, currentImage, refreshed: refresh.ok };
+}
 
+/**
+ * Resolves every open incident of the voice demo, saying `note` in its Slack thread and ending its call.
+ * Returns the ids it resolved.
+ */
+export async function resolveOpenIncidents(note: string): Promise<string[]> {
   const resolved: string[] = [];
   for (const incident of listIncidents()) {
     if (incident.status === "open" || incident.status === "mitigated") {
       incident.status = "resolved";
       incident.resolved_at = new Date().toISOString();
       incident.action_taken = "reset";
-      await postThreadMessage(incident, `:arrows_counterclockwise: Reset from ${source}: demo-api rolled back and incident marked resolved.`);
+      await postThreadMessage(incident, note);
       await endCall(incident);
       resolved.push(incident.id);
     }
   }
+  return resolved;
+}
+
+/**
+ * Commits the good demo-api tag in place of the bad one (nothing when the file does not name the bad
+ * one), asks ArgoCD to refresh, and resolves every open incident, saying so in its Slack thread and
+ * ending its call. `source` names who asked, in the commit and in the thread. GitHub being disabled or
+ * failing is thrown.
+ */
+export async function resetDemoApi(source: "Slack" | "Lots"): Promise<ResetResult> {
+  const { commit, currentImage } = await restoreGoodTag(
+    `revert(oncall-demo): reset demo-api to ${config.demoGoodTag}\n\nReset triggered from ${source}.`,
+  );
+  const resolved = await resolveOpenIncidents(`:arrows_counterclockwise: Reset from ${source}: demo-api rolled back and incident marked resolved.`);
   return { commit, currentImage, resolved };
 }

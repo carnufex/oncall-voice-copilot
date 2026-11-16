@@ -1,5 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import type { MiddlewareHandler } from "hono";
 import { config } from "./config.js";
+import { logger } from "./log.js";
 
 /** Constant-time comparison of the `X-Oncall-Token` header against TOOL_API_TOKEN (SPEC 2.2). */
 export function verifyToolToken(headerValue: string | undefined | null): boolean {
@@ -21,4 +23,21 @@ export function verifyBearer(headerValue: string | undefined | null, expected: s
   const a = createHash("sha256").update(m[1]!, "utf8").digest();
   const b = createHash("sha256").update(expected, "utf8").digest();
   return timingSafeEqual(a, b);
+}
+
+/**
+ * The guard of the routes Lots calls in the cluster (/drill/*, /ops/*): `Authorization: Bearer <DRILL_API_TOKEN>`.
+ * Without DRILL_API_TOKEN (or "unset") they answer 404, the feature is off; a wrong or missing bearer is 401.
+ * `label` names the route family in the log line.
+ */
+export function requireDrillBearer(label: string): MiddlewareHandler {
+  return async (c, next) => {
+    const expected = config.drillApiToken;
+    if (!expected) return c.json({ error: "not_found" }, 404);
+    if (!verifyBearer(c.req.header("Authorization"), expected)) {
+      logger.warn({ path: c.req.path }, `${label}: refused, wrong or missing bearer`);
+      return c.text("Unauthorized.", 401);
+    }
+    await next();
+  };
 }

@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { config } from "../config.js";
-import { verifyBearer } from "../auth.js";
+import { requireDrillBearer } from "../auth.js";
 import { logger } from "../log.js";
-import { badImage, breakDemoApi, goodImage, resetDemoApi } from "../drill.js";
+import { badImage, breakDemoApi, goodImage, resetDemoApi, tagOf } from "../drill.js";
 
 // POST /drill/break and /drill/reset: what `/oncall drill` and `/oncall reset` do, for a Lots alert
 // source's drill button. Lots calls them in the cluster (oncall-tools.oncall-demo.svc:8080) with
@@ -16,20 +16,7 @@ import { badImage, breakDemoApi, goodImage, resetDemoApi } from "../drill.js";
 
 export const drillRoute = new Hono();
 
-drillRoute.use("*", async (c, next) => {
-  const expected = config.drillApiToken;
-  if (!expected) return c.json({ error: "not_found" }, 404);
-  if (!verifyBearer(c.req.header("Authorization"), expected)) {
-    logger.warn({ path: c.req.path }, "drill: refused, wrong or missing bearer");
-    return c.text("Unauthorized.", 401);
-  }
-  await next();
-});
-
-function tagOf(image: string | undefined): string {
-  if (!image) return "no image line";
-  return image.startsWith(`${config.demoImage}:`) ? image.slice(config.demoImage.length + 1) : image;
-}
+drillRoute.use("*", requireDrillBearer("drill"));
 
 drillRoute.post("/break", async (c) => {
   try {

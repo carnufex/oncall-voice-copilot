@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "oncall-tools operations for an agent",
+    "version": "1.0.0",
+    "description": "What an incident investigation in Lots may read and ask for: the recent releases of a service, and a rollback of that service to its known-good version. The rollback is a Git commit that ArgoCD rolls out; Lots holds it until a person approves it."
+  },
+  "servers": [{ "url": "http://oncall-tools.oncall-demo.svc.cluster.local:8080" }],
+  "paths": {
+    "/ops/changes": {
+      "get": {
+        "operationId": "recent_changes",
+        "summary": "Lists what was deployed for a service and when: the last commits (at most 10, newest first) to its deployment manifest in the GitOps repository, each with short commit id, time (ISO 8601, UTC), author, the first line of the message, and image_from/image_to (the image tag before and after) when the commit changed the image. A bad release shows as an image change shortly before the first failure. Read-only.",
+        "parameters": [
+          {
+            "name": "service",
+            "in": "query",
+            "required": true,
+            "description": "The service (Kubernetes deployment) name, for example demo-api.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The recent changes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "service": { "type": "string" },
+                    "file": { "type": "string", "description": "The deployment manifest in the GitOps repository." },
+                    "branch": { "type": "string" },
+                    "changes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "commit": { "type": "string" },
+                          "time": { "type": "string" },
+                          "author": { "type": "string" },
+                          "message": { "type": "string" },
+                          "image_from": { "type": "string", "nullable": true },
+                          "image_to": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Unknown service." },
+          "502": { "description": "GitHub could not be read." }
+        }
+      }
+    },
+    "/ops/rollback": {
+      "post": {
+        "operationId": "rollback_service",
+        "summary": "Rolls a service back to its known-good version (chosen by oncall-tools' configuration, not by you) by committing that image tag to its deployment manifest in the GitOps repository; ArgoCD rolls the commit out and the pods show it in about a minute. A person must approve the call before it runs. Call it at most once, after reporting the finding, and only when the finding says a release caused the failure. The answer names the versions (from, to) and the commit; when the service is already on the known-good version nothing is committed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Both fields are required.",
+                "properties": {
+                  "service": { "type": "string", "description": "Required. The service (Kubernetes deployment) name, for example demo-api." },
+                  "reason": { "type": "string", "description": "Required. One sentence on why: the finding that a release caused the failure (which change, which symptom). Shown to the approver and kept in the commit message (first 200 characters)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed, or already on the known-good version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "service": { "type": "string" },
+                    "from": { "type": "string" },
+                    "to": { "type": "string" },
+                    "commit": { "type": "string", "nullable": true },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "The body is not {service, reason}." },
+          "404": { "description": "The service is not one that can be rolled back." },
+          "409": { "description": "The manifest names neither the bad nor the known-good version; nothing was committed." },
+          "502": { "description": "GitHub refused or failed; nothing was committed." }
+        }
+      }
+    }
+  }
+}
